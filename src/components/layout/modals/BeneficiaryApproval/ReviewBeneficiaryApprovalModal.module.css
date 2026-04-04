@@ -1,0 +1,92 @@
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #e5e7eb;
+  border-radius: 12px;
+  color: #6b7280;
+  gap: 0.5rem;
+  background-color: #f9fafb;
+}
+
+.placeholder strong {
+  color: #111;
+  font-size: 1.1rem;
+}
+
+.statusNote {
+  font-style: italic;
+  font-size: 0.85rem;
+  margin-top: 1rem;
+  color: #9ca3af;
+}/* Keep the same styles as before, just ensure the filename matches the import in the JSX */
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #e5e7eb;
+  border-radius: 12px;
+  color: #6b7280;
+  gap: 0.5rem;
+  background-color: #f9fafb;
+}
+
+.placeholder strong {
+  color: #111;
+  font-size: 1.1rem;
+}
+
+.statusNote {
+  font-style: italic;
+  font-size: 0.85rem;
+  margin-top: 1rem;
+  color: #9ca3af;
+}
+
+/* Keep the same styles as before, just ensure the filename matches the import in the JSX */
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #e5e7eb;
+  border-radius: 12px;
+  color: #6b7280;
+  gap: 0.5rem;
+  background-color: #f9fafb;
+}
+
+.placeholder strong {
+  color: #111;
+  font-size: 1.1rem;
+}
+
+.statusNote {
+  font-style: italic;
+  font-size: 0.85rem;
+  margin-top: 1rem;
+  color: #9ca3af;
+}

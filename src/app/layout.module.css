@@ -1,0 +1,21 @@
+.appWrapper {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: #fdfaf9;
+}
+
+.rightColumn {
+  display: flex;
+  flex-direction: column;
+  flex: 1;          /* This tells it to take up the remaining width next to the sidebar */
+  min-width: 0;     /* Crucial: Prevents the content from pushing the sidebar off-screen */
+  overflow: hidden;
+}
+
+.mainContent {
+  flex: 1;
+  overflow-y: auto; /* Adds a scrollbar only to the main content area */
+  padding: 1.5rem;
+}

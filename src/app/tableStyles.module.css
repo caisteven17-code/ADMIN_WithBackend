@@ -1,41 +1,3 @@
-/* Global Reset */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  /* Updated to the cream background from your image */
-  background-color: #fef9f3;
-  color: #333;
-}
-
-/* Master Layout Structure */
-.appWrapper {
-  display: flex;
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
-  background-color: #fef9f3;
-}
-
-.rightColumn {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.mainContent {
-  flex: 1;
-  overflow-y: auto;
-  padding: 1.5rem;
-}
-
-/* Page Components */
 .pageContainer {
   display: flex;
   flex-direction: column;
@@ -50,12 +12,10 @@ body {
 }
 
 .header p {
-  /* Updated to the primary brand red */
-  color: #a32a2a;
+  color: #9b2c2c;
   font-size: 0.95rem;
 }
 
-/* Table Styles */
 .tableContainer {
   background: white;
   border-radius: 12px;
@@ -71,7 +31,7 @@ body {
 }
 
 .dataTable th {
-  background-color: #fcebeb; /* Light pink-red header */
+  background-color: #fcebeb;
   color: #4a1515;
   font-weight: 600;
   font-size: 0.85rem;
@@ -86,11 +46,13 @@ body {
   vertical-align: middle;
 }
 
-/* Utility Colors */
-.textRed { color: #a32a2a; }
+.dataTable tr:last-child td {
+  border-bottom: none;
+}
+
+.textRed { color: #9b2c2c; }
 .textDark { color: #111; }
 
-/* Status Badges */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -117,9 +79,14 @@ body {
 .badgeRejected { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
 .badgeRejected::before { background: #ef4444; }
 
-/* Action Buttons */
+.badgeReady { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+.badgeReady::before { background: #3b82f6; }
+
+.badgeSent { background: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb; }
+.badgeSent::before { background: #9ca3af; }
+
 .actionBtn {
-  background-color: #a32a2a;
+  background-color: #9b2c2c;
   color: white;
   border: none;
   padding: 0.4rem 1rem;
@@ -131,10 +98,15 @@ body {
 }
 
 .actionBtn:hover {
-  background-color: #8a2424;
+  background-color: #7a2222;
 }
 
 .actionTextDisabled {
   color: #9ca3af;
+  font-size: 0.85rem;
+}
+
+.actionTextCompleted {
+  color: #d77a7a;
   font-size: 0.85rem;
 }

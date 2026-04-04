@@ -1,0 +1,59 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.documentCard {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.previewBox {
+  background-color: #fff5f5; /* Light red/pinkish from mockup */
+  border: 1px dashed #feb2b2;
+  height: 200px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #c53030;
+  margin: 1rem 0;
+  border-radius: 4px;
+}
+
+.rejectionSection textarea {
+  width: 100%;
+  height: 100px;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.approveBtn {
+  background-color: #00c853; /* Green from mockup */
+  color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rejectBtn {
+  background-color: #ff3d00; /* Red from mockup */
+  color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+}

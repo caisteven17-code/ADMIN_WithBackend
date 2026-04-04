@@ -1,0 +1,186 @@
+.dashboardContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.title {
+  font-size: 1.5rem;
+  color: #111;
+  font-weight: 600;
+}
+
+.subtitle {
+  color: #9b2c2c;
+  font-size: 0.95rem;
+}
+
+/* Stats Cards */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+
+.statCard {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #eaeaea;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.iconWrapper {
+  width: 45px;
+  height: 45px;
+  background-color: #fcebeb;
+  color: #d77a7a;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.statValue {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #111;
+  margin-top: 0.5rem;
+}
+
+.statLabel {
+  font-size: 0.85rem;
+  color: #9b2c2c;
+}
+
+/* Recent Activity Section */
+.activitySection {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #eaeaea;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.activityHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.activityHeader h3 {
+  font-size: 1.1rem;
+  color: #111;
+}
+
+.filters {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.filterBtn {
+  padding: 0.5rem 1rem;
+  border: none;
+  background-color: #fcebeb;
+  color: #333;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filterBtn:hover {
+  background-color: #f5dcdc;
+}
+
+.filterBtn.active {
+  background-color: #9b2c2c;
+  color: white;
+}
+
+/* Timeline/List Styles */
+.activityList {
+  display: flex;
+  flex-direction: column;
+}
+
+.activityItem {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.timelineDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-top: 0.25rem;
+  flex-shrink: 0;
+  z-index: 2;
+}
+
+.timelineDot.approval { background-color: #22c55e; }
+.timelineDot.donation { background-color: #3b82f6; }
+.timelineDot.rejection { background-color: #ef4444; }
+
+.activityContent {
+  flex-grow: 1;
+  padding-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  position: relative;
+}
+
+/* The vertical line connecting the dots */
+.activityContent.hasBorder::before {
+  content: '';
+  position: absolute;
+  left: -1.15rem; /* Aligns with the dot */
+  top: 1.25rem;
+  bottom: 0;
+  width: 2px;
+  background-color: #fca5a5; /* Light red line from your design */
+}
+
+.time {
+  font-size: 0.8rem;
+  color: #9b2c2c;
+}
+
+.actionText {
+  color: #111;
+  font-size: 0.95rem;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-top: 0.25rem;
+}
+
+.badge-approval { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+.badge-donation { background-color: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+.badge-rejection { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
+.noData {
+  color: #666;
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 2rem 0;
+}
+

@@ -1,0 +1,21 @@
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #eaeaea;
+  border-radius: 12px;
+  color: #9ca3af;
+  gap: 0.5rem;
+}
+
+.placeholder strong {
+  color: #111;
+}
