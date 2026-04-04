@@ -102,7 +102,7 @@
 
 /* --- Collapsed State Styles --- */
 .collapsed {
-  width: 80px;
+  width: 72px;
   align-items: center;
   padding: 1.5rem 0.5rem;
 }
@@ -113,7 +113,14 @@
 
 .navItemCollapsed {
   justify-content: center;
-  padding: 0.8rem 0;
+  padding: 0.6rem 0.5rem;
+  width: 44px;
+  border-radius: 10px;
+}
+
+.collapsed .navItem.active {
+  width: 44px;
+  padding: 0.6rem 0.5rem;
 }
 
 .collapseBtnCenter {

@@ -162,3 +162,122 @@
 .dropdownItem:hover .dropdownIcon {
   color: #a32a2a; /* Consistent red */
 }
+
+.notificationDropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  background-color: white;
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  width: 360px;
+  max-height: 400px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  z-index: 50;
+}
+
+.notificationDropdownHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.notificationDropdownHeader h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111;
+  margin: 0;
+}
+
+.notificationList {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.notificationDropdownItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 0.875rem 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid #f9f9f9;
+}
+
+.notificationDropdownItem:hover {
+  background-color: #f9f9f9;
+}
+
+.notificationDropdownItem.unread {
+  background-color: #fff8ee;
+}
+
+.notificationIconWrapper {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.notificationIconWrapper.application {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.notificationIconWrapper.approval {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.notificationIconWrapper.rejection {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.notificationIconWrapper.donation {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.notificationIconWrapper.campaign {
+  background-color: #e0e7ff;
+  color: #4f46e5;
+}
+
+.notificationContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.notificationTitle {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #111;
+}
+
+.notificationTime {
+  font-size: 0.75rem;
+  color: #9b2c2c;
+}
+
+.notificationMessage {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin: 2px 0 0 0;
+}
+
+.topRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}

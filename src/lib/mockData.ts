@@ -31,3 +31,46 @@ export const recentActivities = [
     type: "rejection",
   },
 ];
+
+export const notifications = [
+  {
+    id: 1,
+    time: "5 minutes ago",
+    title: "New Digital Donor Application",
+    message: "Maria Santos has applied as a Digital Donor",
+    type: "application",
+    read: false,
+  },
+  {
+    id: 2,
+    time: "15 minutes ago",
+    title: "Beneficiary Approval",
+    message: "Juan dela Cruz has been approved as a beneficiary",
+    type: "approval",
+    read: false,
+  },
+  {
+    id: 3,
+    time: "30 minutes ago",
+    title: "Campaign Manager Rejection",
+    message: "ABC Foundation's application was rejected",
+    type: "rejection",
+    read: false,
+  },
+  {
+    id: 4,
+    time: "1 hour ago",
+    title: "New Donation Received",
+    message: "A donation of ₱5,000 was received from Anonymous Donor",
+    type: "donation",
+    read: true,
+  },
+  {
+    id: 5,
+    time: "2 hours ago",
+    title: "Campaign Update",
+    message: "Health Fund Campaign has reached its goal",
+    type: "campaign",
+    read: true,
+  },
+];

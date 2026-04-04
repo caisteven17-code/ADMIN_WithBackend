@@ -5,38 +5,40 @@ import { CheckCircle2, XCircle } from "lucide-react";
 import ReviewDonorModal from "@/components/layout/modals/DigitalDonors/ReviewDonorModal";
 import styles from "../tableStyles.module.css";
 
-const donors = [
+const initialDonors = [
   { 
     id: 1, 
     name: "Maria Santos", 
     email: "maria@email.com", 
     date: "2026-03-28", 
-    idVerified: true, 
-    bankVerified: true, 
+    idVerified: false, 
+    bankVerified: false, 
     status: "Pending",
-    // Added extra data for the modal to display
     age: 28,
     gender: "Female",
     occupation: "Software Engineer",
     phone: "+63 912 345 6789",
     address: "123 Hope St, Manila, Philippines",
-    image: "/HopeCard%20Logo.png" // Using your logo as a placeholder
+    image: "/HopeCard%20Logo.png"
   },
-  { id: 2, name: "Juan dela Cruz", email: "juan@email.com", date: "2026-03-27", idVerified: true, bankVerified: false, status: "Pending", age: 35, gender: "Male", occupation: "Teacher", phone: "+63 987 654 3210", address: "456 Charity Ln, Quezon City" },
-  { id: 3, name: "Ana Reyes", email: "ana@email.com", date: "2026-03-26", idVerified: false, bankVerified: true, status: "Pending", age: 24, gender: "Female", occupation: "Graphic Designer", phone: "+63 911 222 3333", address: "789 Kindness Blvd, Cebu City" },
+  { id: 2, name: "Juan dela Cruz", email: "juan@email.com", date: "2026-03-27", idVerified: false, bankVerified: false, status: "Pending", age: 35, gender: "Male", occupation: "Teacher", phone: "+63 987 654 3210", address: "456 Charity Ln, Quezon City" },
+  { id: 3, name: "Ana Reyes", email: "ana@email.com", date: "2026-03-26", idVerified: false, bankVerified: false, status: "Pending", age: 24, gender: "Female", occupation: "Graphic Designer", phone: "+63 911 222 3333", address: "789 Kindness Blvd, Cebu City" },
   { id: 4, name: "Pedro Garcia", email: "pedro@email.com", date: "2026-03-25", idVerified: true, bankVerified: true, status: "Approved" },
   { id: 5, name: "Sofia Martinez", email: "sofia@email.com", date: "2026-03-24", idVerified: false, bankVerified: false, status: "Rejected" },
 ];
 
 export default function DigitalDonors() {
-  // 1. Setup the state
+  const [donors, setDonors] = useState(initialDonors);
   const [selectedDonor, setSelectedDonor] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // 2. Function to open the modal
+ 
   const handleReview = (donor: any) => {
     setSelectedDonor(donor);
     setIsModalOpen(true);
+  };
+
+  const handleUpdateDonor = (updatedDonor: any) => {
+    setDonors(donors.map(d => d.id === updatedDonor.id ? updatedDonor : d));
   };
 
   return (
@@ -88,7 +90,8 @@ export default function DigitalDonors() {
       <ReviewDonorModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
-        donorData={selectedDonor} 
+        donorData={selectedDonor}
+        onUpdate={handleUpdateDonor}
       />
     </div>
   );

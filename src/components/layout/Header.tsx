@@ -2,26 +2,49 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, User, ChevronDown, Settings, LogOut } from "lucide-react";
-// Import both modals
+import { Bell, User, ChevronDown, Settings, LogOut, UserPlus, CheckCircle, XCircle, DollarSign, Target } from "lucide-react";
 import SettingsMenuModal from "./modals/SettingsMenuModal";
 import ChangePasswordModal from "./modals/ChangePasswordModal";
+import { notifications } from "@/lib/mockData";
 import styles from "./Header.module.css";
+
+const getNotificationIcon = (type: string) => {
+  switch (type) {
+    case "application":
+      return <UserPlus size={16} />;
+    case "approval":
+      return <CheckCircle size={16} />;
+    case "rejection":
+      return <XCircle size={16} />;
+    case "donation":
+      return <DollarSign size={16} />;
+    case "campaign":
+      return <Target size={16} />;
+    default:
+      return <Bell size={16} />;
+  }
+};
 
 export default function Header() {
   const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   
-  // State for the two-step flow
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
   
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const notificationRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
+      }
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setIsNotificationOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -53,10 +76,40 @@ export default function Header() {
         </div>
 
         <div className={styles.userSection}>
-          <button className={styles.notificationBtn}>
-            <Bell size={20} />
-            <span className={styles.notificationDot}></span>
-          </button>
+          <div ref={notificationRef} style={{ position: "relative" }}>
+            <button className={styles.notificationBtn} onClick={() => setIsNotificationOpen(!isNotificationOpen)}>
+              <Bell size={20} />
+              {unreadCount > 0 && <span className={styles.notificationDot}></span>}
+            </button>
+
+            {isNotificationOpen && (
+              <div className={styles.notificationDropdown}>
+                <div className={styles.notificationDropdownHeader}>
+                  <h3>Notifications</h3>
+                  {unreadCount > 0 && <span className={styles.notificationTime}>{unreadCount} new</span>}
+                </div>
+                <div className={styles.notificationList}>
+                  {notifications.map((notification) => (
+                    <div
+                      key={notification.id}
+                      className={`${styles.notificationDropdownItem} ${!notification.read ? styles.unread : ""}`}
+                    >
+                      <div className={`${styles.notificationIconWrapper} ${styles[notification.type]}`}>
+                        {getNotificationIcon(notification.type)}
+                      </div>
+                      <div className={styles.notificationContent}>
+                        <div className={styles.topRow}>
+                          <span className={styles.notificationTitle}>{notification.title}</span>
+                          <span className={styles.notificationTime}>{notification.time}</span>
+                        </div>
+                        <p className={styles.notificationMessage}>{notification.message}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
           <div className={styles.divider}></div>
 

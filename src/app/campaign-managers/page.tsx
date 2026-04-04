@@ -1,25 +1,29 @@
 "use client";
 
-import { useState } from "react"; // Added
+import { useState } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
-import ReviewManagerModal from "@/components/layout/modals/CampaignManagers/ReviewManagerModal"; // Added
+import ReviewManagerModal from "@/components/layout/modals/CampaignManagers/ReviewManagerModal";
 import styles from "../tableStyles.module.css";
 
-const managers = [
-  { id: 1, name: "Hope Community Org", org: "Hope Foundation", email: "contact@hope.org", date: "2026-03-29", docsVerified: true, status: "Pending" },
+const initialManagers = [
+  { id: 1, name: "Hope Community Org", org: "Hope Foundation", email: "contact@hope.org", date: "2026-03-29", docsVerified: false, status: "Pending" },
   { id: 2, name: "ABC Foundation", org: "ABC Charity", email: "info@abc.org", date: "2026-03-28", docsVerified: false, status: "Pending" },
   { id: 3, name: "Care Society", org: "Care Org", email: "admin@care.org", date: "2026-03-27", docsVerified: true, status: "Approved" },
   { id: 4, name: "Help Network", org: "Help Inc", email: "contact@help.org", date: "2026-03-26", docsVerified: false, status: "Rejected" },
 ];
 
 export default function CampaignManagers() {
-  // Setup State
+  const [managers, setManagers] = useState(initialManagers);
   const [selectedManager, setSelectedManager] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleReview = (manager: any) => {
     setSelectedManager(manager);
     setIsModalOpen(true);
+  };
+
+  const handleUpdateManager = (updatedManager: any) => {
+    setManagers(managers.map(m => m.id === updatedManager.id ? updatedManager : m));
   };
 
   return (
@@ -71,6 +75,7 @@ export default function CampaignManagers() {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         managerData={selectedManager}
+        onUpdate={handleUpdateManager}
       />
     </div>
   );

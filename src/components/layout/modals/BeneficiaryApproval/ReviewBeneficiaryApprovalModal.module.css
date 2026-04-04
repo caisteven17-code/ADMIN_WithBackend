@@ -1,92 +1,207 @@
 .container {
-  height: 100%;
   display: flex;
   flex-direction: column;
+  gap: 1.5rem;
 }
 
-.placeholder {
-  flex: 1;
+.section {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border: 2px dashed #e5e7eb;
-  border-radius: 12px;
-  color: #6b7280;
-  gap: 0.5rem;
-  background-color: #f9fafb;
+  gap: 1rem;
 }
 
-.placeholder strong {
-  color: #111;
-  font-size: 1.1rem;
-}
-
-.statusNote {
-  font-style: italic;
+.sectionTitle {
   font-size: 0.85rem;
-  margin-top: 1rem;
-  color: #9ca3af;
-}/* Keep the same styles as before, just ensure the filename matches the import in the JSX */
-.container {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.placeholder {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border: 2px dashed #e5e7eb;
-  border-radius: 12px;
-  color: #6b7280;
-  gap: 0.5rem;
-  background-color: #f9fafb;
-}
-
-.placeholder strong {
+  font-weight: 600;
   color: #111;
-  font-size: 1.1rem;
+  margin: 0;
 }
 
-.statusNote {
-  font-style: italic;
-  font-size: 0.85rem;
-  margin-top: 1rem;
-  color: #9ca3af;
-}
-
-/* Keep the same styles as before, just ensure the filename matches the import in the JSX */
-.container {
-  height: 100%;
+.infoGrid {
   display: flex;
   flex-direction: column;
-}
-
-.placeholder {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border: 2px dashed #e5e7eb;
-  border-radius: 12px;
-  color: #6b7280;
-  gap: 0.5rem;
+  gap: 0.75rem;
   background-color: #f9fafb;
+  padding: 1rem;
+  border-radius: 8px;
 }
 
-.placeholder strong {
-  color: #111;
-  font-size: 1.1rem;
+.infoItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.statusNote {
-  font-style: italic;
+.infoLabel {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.infoValue {
   font-size: 0.85rem;
-  margin-top: 1rem;
+  font-weight: 500;
+  color: #111;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #555;
+}
+
+.documentPreview {
+  margin: 0.25rem 0;
+}
+
+.previewBox {
+  background-color: #fefcfc;
+  border: 1px dashed #d1d5db;
+  height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   color: #9ca3af;
+  border-radius: 8px;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.verificationStatus {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background-color: #f9fafb;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: #374151;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: #374151;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background-color: #f9fafb;
+  border-radius: 6px;
+}
+
+.checkbox input {
+  width: 16px;
+  height: 16px;
+  accent-color: #a32a2a;
+  cursor: pointer;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.statusIcon {
+  flex-shrink: 0;
+}
+
+.bankDetails {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+  background-color: #f9fafb;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.bankField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.bankValue {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #111;
+}
+
+.textarea {
+  width: 100%;
+  height: 100px;
+  padding: 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  resize: none;
+  font-family: inherit;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: #a32a2a;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.approveBtn {
+  background-color: #22c55e;
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.approveBtn:hover {
+  background-color: #16a34a;
+}
+
+.rejectBtn {
+  background-color: #a32a2a;
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.rejectBtn:hover {
+  background-color: #8b1a1a;
+}
+
+.cancelBtn {
+  background-color: #f3f4f6;
+  color: #374151;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.cancelBtn:hover {
+  background-color: #e5e7eb;
 }

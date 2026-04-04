@@ -1,6 +1,6 @@
 "use client";
 
-import { X, User, Lock, Bell, Shield } from "lucide-react";
+import { X, Lock } from "lucide-react";
 import styles from "./SettingsMenuModal.module.css";
 
 interface SettingsMenuModalProps {
@@ -21,21 +21,8 @@ export default function SettingsMenuModal({ isOpen, onClose, onChangePasswordCli
         </div>
         
         <div className={styles.menuList}>
-          <button className={styles.menuItem}>
-            <User size={18} /> <span>Account Information</span>
-          </button>
-          
-          {/* This button triggers the next modal */}
           <button className={styles.menuItem} onClick={onChangePasswordClick}>
             <Lock size={18} /> <span>Change Password</span>
-          </button>
-          
-          <button className={styles.menuItem}>
-            <Bell size={18} /> <span>Notifications</span>
-          </button>
-          
-          <button className={styles.menuItem}>
-            <Shield size={18} /> <span>Privacy & Security</span>
           </button>
         </div>
       </div>

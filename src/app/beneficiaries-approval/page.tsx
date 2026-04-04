@@ -2,26 +2,28 @@
 
 import { useState } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
-// Import the renamed modal
 import ReviewBeneficiaryApprovalModal from "@/components/layout/modals/BeneficiaryApproval/ReviewBeneficiaryApprovalModal";
 import styles from "../tableStyles.module.css";
 
-const approvals = [
-  { id: 1, name: "Ana Reyes", campaign: "Medical Assistance", email: "ana@email.com", date: "2026-03-30", docs: true, bank: true, status: "Pending" },
-  { id: 2, name: "Carlos Santos", campaign: "Education Fund", email: "carlos@email.com", date: "2026-03-29", docs: true, bank: false, status: "Pending" },
-  { id: 3, name: "Elena Cruz", campaign: "Disaster Relief", email: "elena@email.com", date: "2026-03-28", docs: false, bank: true, status: "Pending" },
+const initialApprovals = [
+  { id: 1, name: "Ana Reyes", campaign: "Medical Assistance", email: "ana@email.com", date: "2026-03-30", docs: false, bank: false, status: "Pending" },
+  { id: 2, name: "Carlos Santos", campaign: "Education Fund", email: "carlos@email.com", date: "2026-03-29", docs: false, bank: false, status: "Pending" },
+  { id: 3, name: "Elena Cruz", campaign: "Disaster Relief", email: "elena@email.com", date: "2026-03-28", docs: false, bank: false, status: "Pending" },
   { id: 4, name: "Miguel Torres", campaign: "Food Security", email: "miguel@email.com", date: "2026-03-27", docs: true, bank: true, status: "Approved" },
 ];
 
 export default function BeneficiariesApproval() {
-  // 1. State for modal visibility and tracking which item is clicked
+  const [approvals, setApprovals] = useState(initialApprovals);
   const [selectedBeneficiary, setSelectedBeneficiary] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // 2. Helper to open modal with the correct data
   const handleReview = (item: any) => {
     setSelectedBeneficiary(item);
     setIsModalOpen(true);
+  };
+
+  const handleUpdateBeneficiary = (updatedBeneficiary: any) => {
+    setApprovals(approvals.map(a => a.id === updatedBeneficiary.id ? updatedBeneficiary : a));
   };
 
   return (
@@ -76,6 +78,7 @@ export default function BeneficiariesApproval() {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         beneficiaryData={selectedBeneficiary}
+        onUpdate={handleUpdateBeneficiary}
       />
     </div>
   );
