@@ -2,43 +2,48 @@
 
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Mail, Lock } from "lucide-react";
+import { Mail, ArrowLeft } from "lucide-react";
 import { useState } from "react";
-import styles from "./login.module.css";
+import styles from "@/app/login/login.module.css";
 
-export default function Login() {
+export default function ForgotPassword() {
   const router = useRouter();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSendOTP = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch("/api/auth/send-otp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Login failed");
+        setError(data.error || "Failed to send OTP");
         setLoading(false);
         return;
       }
 
-      // Login successful, redirect to dashboard
-      router.push("/dashboard");
+      setSuccess(`OTP sent to ${data.email}`);
+      
+      // Redirect to verify page after 2 seconds
+      setTimeout(() => {
+        router.push(`/verify?email=${encodeURIComponent(email)}`);
+      }, 2000);
     } catch (err) {
-      setError("An error occurred during login");
+      setError("An error occurred");
       console.error(err);
       setLoading(false);
     }
@@ -47,14 +52,14 @@ export default function Login() {
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.loginContainer}>
-
+        
         <div className={styles.logoSection}>
           <div className={styles.logoMark}>
-            <Image
-              src="/HopeCard%20Logo.png"
-              alt="HopeCard Logo"
-              width={60}
-              height={60}
+            <Image 
+              src="/HopeCard%20Logo.png" 
+              alt="HopeCard Logo" 
+              width={60} 
+              height={60} 
               priority
               style={{ objectFit: "contain" }}
             />
@@ -64,8 +69,8 @@ export default function Login() {
 
         <div className={styles.card}>
           <div className={styles.cardHeader}>
-            <h2>Welcome Back</h2>
-            <p>Sign in to access the admin portal</p>
+            <h2>Reset Password</h2>
+            <p>Enter your email to receive a reset code</p>
           </div>
 
           {error && (
@@ -74,15 +79,29 @@ export default function Login() {
             </div>
           )}
 
-          <form onSubmit={handleLogin} className={styles.form}>
+          {success && (
+            <div style={{
+              backgroundColor: "#dcfce7",
+              border: "1px solid #86efac",
+              borderRadius: "8px",
+              padding: "0.75rem 1rem",
+              color: "#166534",
+              fontSize: "0.9rem",
+              marginBottom: "1rem"
+            }}>
+              {success}
+            </div>
+          )}
+
+          <form onSubmit={handleSendOTP} className={styles.form}>
             <div className={styles.inputGroup}>
               <label>Email Address</label>
               <div className={styles.inputWrapper}>
                 <Mail size={18} className={styles.inputIcon} />
-                <input
-                  type="email"
-                  placeholder="admin@hopecard.com"
-                  required
+                <input 
+                  type="email" 
+                  placeholder="admin@hopecard.com" 
+                  required 
                   className={styles.input}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -91,37 +110,28 @@ export default function Login() {
               </div>
             </div>
 
-            <div className={styles.inputGroup}>
-              <label>Password</label>
-              <div className={styles.inputWrapper}>
-                <Lock size={18} className={styles.inputIcon} />
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  required
-                  className={styles.input}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={loading}
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
+            <button 
+              type="submit" 
               className={styles.loginBtn}
               disabled={loading}
             >
-              {loading ? "Logging in..." : "Log In"}
+              {loading ? "Sending..." : "Send Reset Code"}
             </button>
           </form>
 
           <div className={styles.forgotPassword}>
-            <button
+            <button 
               type="button"
-              onClick={() => router.push("/forgot-password")}
+              onClick={() => router.push("/login")}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.5rem"
+              }}
             >
-              Forgot Password?
+              <ArrowLeft size={18} />
+              Back to Login
             </button>
           </div>
         </div>
