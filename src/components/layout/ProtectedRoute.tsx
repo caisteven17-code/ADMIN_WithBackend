@@ -9,33 +9,37 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Check if token exists in cookies
-    const getCookie = (name: string) => {
-      const nameEQ = name + '=';
-      const cookies = document.cookie.split(';');
-      for (let i = 0; i < cookies.length; i++) {
-        let cookie = cookies[i].trim();
-        if (cookie.indexOf(nameEQ) === 0) {
-          return cookie.substring(nameEQ.length);
+    // Verify session with server
+    const verifySession = async () => {
+      try {
+        const response = await fetch('/api/auth/verify-session', {
+          method: 'GET',
+          credentials: 'include', // Include cookies in the request
+        });
+
+        const data = await response.json();
+
+        if (data.authenticated) {
+          console.log('Session verified, granting access');
+          setIsAuthorized(true);
+        } else {
+          console.log('Session verification failed, redirecting to login');
+          setIsAuthorized(false);
+          // Use a small delay to ensure redirect happens smoothly
+          setTimeout(() => {
+            router.push('/login');
+          }, 100);
         }
+      } catch (error) {
+        console.error('Session verification error:', error);
+        setIsAuthorized(false);
+        setTimeout(() => {
+          router.push('/login');
+        }, 100);
       }
-      return null;
     };
 
-    const token = getCookie('admin_token');
-
-    if (!token) {
-      console.log('No admin_token found in cookies, redirecting to login');
-      setIsAuthorized(false);
-      // Use a small delay to ensure redirect happens smoothly
-      setTimeout(() => {
-        router.push('/login');
-      }, 100);
-      return;
-    }
-
-    console.log('admin_token found, granting access');
-    setIsAuthorized(true);
+    verifySession();
   }, [router]);
 
   // Show nothing while checking authorization

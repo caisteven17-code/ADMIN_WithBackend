@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       response.cookies.set({
         name: 'admin_token',
         value: jwtToken,
-        httpOnly: true,
+        httpOnly: process.env.NODE_ENV === 'production', // Only httpOnly in production
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         maxAge: 24 * 60 * 60, // 24 hours
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
       response.cookies.set({
         name: 'admin_token',
         value: jwtToken,
-        httpOnly: true,
+        httpOnly: process.env.NODE_ENV === 'production', // Only httpOnly in production
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         maxAge: 24 * 60 * 60, // 24 hours
