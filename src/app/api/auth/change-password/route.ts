@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseServer } from '@/lib/supabase/server';
+import { supabaseServer, validateServerConfig } from '@/lib/supabase/server';
 import { jwtVerify } from 'jose';
 
 const JWT_SECRET = new TextEncoder().encode(
@@ -8,6 +8,8 @@ const JWT_SECRET = new TextEncoder().encode(
 
 export async function POST(request: NextRequest) {
   try {
+    validateServerConfig();
+
     // Get JWT token from cookie
     const token = request.cookies.get('admin_token')?.value;
 

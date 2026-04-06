@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseServer } from '@/lib/supabase/server';
+import { supabaseServer, validateServerConfig } from '@/lib/supabase/server';
 import { createJWT } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
+    validateServerConfig();
+
     const { email, password } = await request.json();
 
     // Validate input

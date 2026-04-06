@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseServer } from '@/lib/supabase/server';
+import { supabaseServer, validateServerConfig } from '@/lib/supabase/server';
 import { generateOTP } from '@/lib/auth';
 
 // In production, use a real email service
@@ -13,6 +13,8 @@ const emailService = {
 
 export async function POST(request: NextRequest) {
   try {
+    validateServerConfig();
+
     const { email } = await request.json();
 
     // Validate input
