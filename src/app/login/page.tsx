@@ -49,8 +49,11 @@ export default function Login() {
         }));
       }
 
-      // Login successful, redirect to dashboard
-      router.push("/dashboard");
+      // Small delay to ensure cookie is set before redirecting
+      // This allows the middleware to see the token on the next request
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 100);
     } catch (err) {
       setError("An error occurred during login");
       console.error(err);
