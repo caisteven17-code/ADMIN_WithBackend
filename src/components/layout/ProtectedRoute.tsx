@@ -1,32 +1,45 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const pathname = usePathname();
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
   useEffect(() => {
     // Check if token exists in cookies
-    const hasToken = document.cookie
-      .split('; ')
-      .some(row => row.startsWith('admin_token='));
+    const getCookie = (name: string) => {
+      const nameEQ = name + '=';
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        let cookie = cookies[i].trim();
+        if (cookie.indexOf(nameEQ) === 0) {
+          return cookie.substring(nameEQ.length);
+        }
+      }
+      return null;
+    };
 
-    if (!hasToken) {
-      // Redirect to login if no token
-      router.replace('/login');
+    const token = getCookie('admin_token');
+
+    if (!token) {
+      console.log('No admin_token found in cookies, redirecting to login');
+      setIsAuthorized(false);
+      // Use a small delay to ensure redirect happens smoothly
+      setTimeout(() => {
+        router.push('/login');
+      }, 100);
       return;
     }
 
+    console.log('admin_token found, granting access');
     setIsAuthorized(true);
-    setIsLoading(false);
   }, [router]);
 
-  if (isLoading) {
+  // Show nothing while checking authorization
+  if (isAuthorized === null) {
     return (
       <div style={{
         display: 'flex',
@@ -56,7 +69,8 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!isAuthorized) {
+  // Don't render if not authorized
+  if (isAuthorized === false) {
     return null;
   }
 

@@ -1,8 +1,8 @@
 import { supabaseServer } from './supabase/server';
-import { jwtVerify } from 'jose';
+import { jwtVerify, SignJWT } from 'jose';
 
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'your-secret-key-change-in-production'
+  process.env.JWT_SECRET || 'hopecard-admin-secret-key-change-in-production'
 );
 
 /**
@@ -13,57 +13,25 @@ export async function verifyJWT(token: string) {
     const verified = await jwtVerify(token, JWT_SECRET);
     return verified.payload;
   } catch (error) {
+    console.error('JWT verification error:', error);
     return null;
   }
 }
 
 /**
- * Create JWT token for admin
+ * Create JWT token for admin - using jose library
  */
 export async function createJWT(adminId: string, adminEmail: string) {
-  const payload = {
+  const token = await new SignJWT({
     sub: adminId,
     email: adminEmail,
-    iat: Date.now(),
-    exp: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
-  };
+  })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('24h')
+    .sign(JWT_SECRET);
 
-  const secret = new TextEncoder().encode(
-    process.env.JWT_SECRET || 'your-secret-key-change-in-production'
-  );
-
-  // Using simple JWT generation for Node.js
-  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
-  const body = btoa(JSON.stringify(payload));
-  const signature = await generateHMAC(
-    `${header}.${body}`,
-    process.env.JWT_SECRET || 'your-secret-key-change-in-production'
-  );
-
-  return `${header}.${body}.${signature}`;
-}
-
-/**
- * Generate HMAC signature
- */
-async function generateHMAC(message: string, secret: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const keyData = encoder.encode(secret);
-  const messageData = encoder.encode(message);
-
-  const key = await crypto.subtle.importKey(
-    'raw',
-    keyData,
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign']
-  );
-
-  const signature = await crypto.subtle.sign('HMAC', key, messageData);
-  return btoa(String.fromCharCode(...new Uint8Array(signature)))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
+  return token;
 }
 
 /**

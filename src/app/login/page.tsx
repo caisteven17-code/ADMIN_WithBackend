@@ -124,6 +124,19 @@ export default function Login() {
               Forgot Password?
             </button>
           </div>
+
+          <div style={{
+            marginTop: '1.5rem',
+            padding: '0.75rem',
+            backgroundColor: '#fef3c7',
+            border: '1px solid #fcd34d',
+            borderRadius: '6px',
+            fontSize: '0.85rem',
+            color: '#78350f',
+            textAlign: 'center'
+          }}>
+            Demo: Use <strong>admin@hopecard.com</strong> / <strong>admin123</strong>
+          </div>
         </div>
       </div>
     </div>
