@@ -14,110 +14,66 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Demo credentials for testing (remove in production)
-    if (email === 'admin@hopecard.com' && password === 'admin123') {
-      const demoAdminId = 'demo-admin-' + Date.now();
-      const jwtToken = await createJWT(demoAdminId, email);
+    // Validate Supabase is configured
+    validateServerConfig();
 
-      const response = NextResponse.json(
-        {
-          success: true,
-          message: 'Login successful (demo mode)',
-          token: jwtToken,
-          admin: {
-            id: demoAdminId,
-            email: email,
-            name: 'Demo Admin',
-          },
-        },
-        { status: 200 }
-      );
+    // Sign in with Supabase Auth
+    const { data, error } = await supabaseServer.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-      // Set token in cookie
-      response.cookies.set({
-        name: 'admin_token',
-        value: jwtToken,
-        httpOnly: false,
-        secure: false,
-        sameSite: 'lax',
-        maxAge: 24 * 60 * 60, // 24 hours
-        path: '/',
-      });
-
-      return response;
-    }
-
-    // Try Supabase authentication if configured
-    try {
-      validateServerConfig();
-
-      // Sign in with Supabase Auth
-      const { data, error } = await supabaseServer.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error || !data.user) {
-        return NextResponse.json(
-          { error: 'Invalid email or password' },
-          { status: 401 }
-        );
-      }
-
-      // Check if user is an admin (from custom claims or admin table)
-      const { data: adminData, error: adminError } = await supabaseServer
-        .from('admins')
-        .select('id, email, name')
-        .eq('id', data.user.id)
-        .single();
-
-      if (adminError || !adminData) {
-        return NextResponse.json(
-          { error: 'User is not an admin' },
-          { status: 403 }
-        );
-      }
-
-      // Create JWT token
-      const jwtToken = await createJWT(data.user.id, email);
-
-      // Create response with token in cookie
-      const response = NextResponse.json(
-        {
-          success: true,
-          message: 'Login successful',
-          token: jwtToken,
-          admin: {
-            id: adminData.id,
-            email: adminData.email,
-            name: adminData.name,
-          },
-        },
-        { status: 200 }
-      );
-
-      // Set token in cookie
-      response.cookies.set({
-        name: 'admin_token',
-        value: jwtToken,
-        httpOnly: false,
-        secure: false,
-        sameSite: 'lax',
-        maxAge: 24 * 60 * 60, // 24 hours
-        path: '/',
-      });
-
-      return response;
-    } catch (supabaseError) {
-      // If Supabase is not configured, return appropriate error
-      console.error('Supabase auth error:', supabaseError);
+    if (error || !data.user) {
       return NextResponse.json(
-        {
-          error: 'Supabase not configured. Use demo credentials: admin@hopecard.com / admin123',
-        },
+        { error: 'Invalid email or password' },
         { status: 401 }
       );
     }
+
+    // Check if user is an admin
+    const { data: adminData, error: adminError } = await supabaseServer
+      .from('admins')
+      .select('id, email, name')
+      .eq('id', data.user.id)
+      .single();
+
+    if (adminError || !adminData) {
+      return NextResponse.json(
+        { error: 'User is not an admin' },
+        { status: 403 }
+      );
+    }
+
+    // Create JWT token
+    const jwtToken = await createJWT(data.user.id, email);
+
+    // Create response with token in cookie
+    const response = NextResponse.json(
+      {
+        success: true,
+        message: 'Login successful',
+        token: jwtToken,
+        admin: {
+          id: adminData.id,
+          email: adminData.email,
+          name: adminData.name,
+        },
+      },
+      { status: 200 }
+    );
+
+    // Set token in cookie
+    response.cookies.set({
+      name: 'admin_token',
+      value: jwtToken,
+      httpOnly: false,
+      secure: false,
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60, // 24 hours
+      path: '/',
+    });
+
+    return response;
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(
