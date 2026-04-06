@@ -10,12 +10,22 @@ export async function POST(request: NextRequest) {
   try {
     validateServerConfig();
 
-    // Get JWT token from cookie
-    const token = request.cookies.get('admin_token')?.value;
+    const { currentPassword, newPassword, confirmPassword, token: tokenFromBody } =
+      await request.json();
+
+    // Get JWT token from cookie, header, or request body
+    let token = request.cookies.get('admin_token')?.value || tokenFromBody;
+
+    if (!token) {
+      const authHeader = request.headers.get('authorization');
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
+    }
 
     if (!token) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Unauthorized - no token provided' },
         { status: 401 }
       );
     }
@@ -23,9 +33,6 @@ export async function POST(request: NextRequest) {
     // Verify JWT token
     const verified = await jwtVerify(token, JWT_SECRET);
     const userId = verified.payload.sub as string;
-
-    const { currentPassword, newPassword, confirmPassword } =
-      await request.json();
 
     // Validate input
     if (!currentPassword || !newPassword || !confirmPassword) {
