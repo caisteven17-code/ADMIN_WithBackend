@@ -35,6 +35,11 @@ export default function Login() {
         return;
       }
 
+      // Store token in localStorage for client-side verification
+      if (data.token) {
+        localStorage.setItem('admin_token', data.token);
+      }
+
       // Login successful, redirect to dashboard
       router.push("/dashboard");
     } catch (err) {

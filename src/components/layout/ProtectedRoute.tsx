@@ -9,37 +9,21 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Verify session with server
-    const verifySession = async () => {
-      try {
-        const response = await fetch('/api/auth/verify-session', {
-          method: 'GET',
-          credentials: 'include', // Include cookies in the request
-        });
+    // Check if token exists in localStorage
+    const token = localStorage.getItem('admin_token');
 
-        const data = await response.json();
+    if (!token) {
+      console.log('No admin_token found in localStorage, redirecting to login');
+      setIsAuthorized(false);
+      // Use a small delay to ensure redirect happens smoothly
+      setTimeout(() => {
+        router.push('/login');
+      }, 100);
+      return;
+    }
 
-        if (data.authenticated) {
-          console.log('Session verified, granting access');
-          setIsAuthorized(true);
-        } else {
-          console.log('Session verification failed, redirecting to login');
-          setIsAuthorized(false);
-          // Use a small delay to ensure redirect happens smoothly
-          setTimeout(() => {
-            router.push('/login');
-          }, 100);
-        }
-      } catch (error) {
-        console.error('Session verification error:', error);
-        setIsAuthorized(false);
-        setTimeout(() => {
-          router.push('/login');
-        }, 100);
-      }
-    };
-
-    verifySession();
+    console.log('admin_token found in localStorage, granting access');
+    setIsAuthorized(true);
   }, [router]);
 
   // Show nothing while checking authorization

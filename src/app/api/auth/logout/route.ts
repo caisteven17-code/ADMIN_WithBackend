@@ -15,8 +15,8 @@ export async function POST(request: NextRequest) {
     response.cookies.set({
       name: 'admin_token',
       value: '',
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      httpOnly: false,
+      secure: false,
       sameSite: 'lax',
       maxAge: 0, // Immediately expire
       path: '/',

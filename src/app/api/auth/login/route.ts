@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
         {
           success: true,
           message: 'Login successful (demo mode)',
+          token: jwtToken,
           admin: {
             id: demoAdminId,
             email: email,
@@ -32,12 +33,12 @@ export async function POST(request: NextRequest) {
         { status: 200 }
       );
 
-      // Set secure cookie
+      // Set token in cookie
       response.cookies.set({
         name: 'admin_token',
         value: jwtToken,
-        httpOnly: process.env.NODE_ENV === 'production', // Only httpOnly in production
-        secure: process.env.NODE_ENV === 'production',
+        httpOnly: false,
+        secure: false,
         sameSite: 'lax',
         maxAge: 24 * 60 * 60, // 24 hours
         path: '/',
@@ -85,6 +86,7 @@ export async function POST(request: NextRequest) {
         {
           success: true,
           message: 'Login successful',
+          token: jwtToken,
           admin: {
             id: adminData.id,
             email: adminData.email,
@@ -94,12 +96,12 @@ export async function POST(request: NextRequest) {
         { status: 200 }
       );
 
-      // Set secure cookie
+      // Set token in cookie
       response.cookies.set({
         name: 'admin_token',
         value: jwtToken,
-        httpOnly: process.env.NODE_ENV === 'production', // Only httpOnly in production
-        secure: process.env.NODE_ENV === 'production',
+        httpOnly: false,
+        secure: false,
         sameSite: 'lax',
         maxAge: 24 * 60 * 60, // 24 hours
         path: '/',
