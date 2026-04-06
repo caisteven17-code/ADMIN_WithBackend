@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json(
       {
         success: true,
-        message: 'OTP verified successfully',
+        message: 'OTP verified successfully. Logging you in...',
         token: jwtToken,
         admin: {
           id: adminData.id,

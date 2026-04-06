@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer, validateServerConfig } from '@/lib/supabase/server';
-import { createJWT } from '@/lib/auth';
+import { generateOTP } from '@/lib/auth';
+
+// Email service placeholder
+const emailService = {
+  sendEmail: async (to: string, subject: string, text: string) => {
+    console.log(`\n📧 EMAIL SENT`);
+    console.log(`To: ${to}`);
+    console.log(`Subject: ${subject}`);
+    console.log(`Message: ${text}`);
+    console.log(`---\n`);
+    return true;
+  },
+};
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,7 +29,7 @@ export async function POST(request: NextRequest) {
     // Validate Supabase is configured
     validateServerConfig();
 
-    // Sign in with Supabase Auth
+    // Sign in with Supabase Auth to verify credentials
     const { data, error } = await supabaseServer.auth.signInWithPassword({
       email,
       password,
@@ -44,36 +56,53 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create JWT token
-    const jwtToken = await createJWT(data.user.id, email);
+    // Generate OTP
+    const otp = generateOTP();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    // Create response with token in cookie
-    const response = NextResponse.json(
+    // Store OTP in database
+    const { error: otpError } = await supabaseServer
+      .from('otp_sessions')
+      .insert({
+        email,
+        otp,
+        expires_at: expiresAt.toISOString(),
+        used: false,
+      });
+
+    if (otpError) {
+      console.error('OTP storage error:', otpError);
+      return NextResponse.json(
+        { error: 'Failed to generate OTP' },
+        { status: 500 }
+      );
+    }
+
+    // Send OTP via email
+    const emailSent = await emailService.sendEmail(
+      email,
+      'Your HopeCard Admin OTP',
+      `Your one-time password is: ${otp}\n\nThis code will expire in 10 minutes.\n\nIf you did not request this, please ignore this email.`
+    );
+
+    if (!emailSent) {
+      return NextResponse.json(
+        { error: 'Failed to send OTP email' },
+        { status: 500 }
+      );
+    }
+
+    // Return success - user needs to verify OTP next
+    return NextResponse.json(
       {
         success: true,
-        message: 'Login successful',
-        token: jwtToken,
-        admin: {
-          id: adminData.id,
-          email: adminData.email,
-          name: adminData.name,
-        },
+        message: 'OTP sent to email. Please check your inbox.',
+        email: email,
+        adminId: adminData.id,
+        requiresOtp: true,
       },
       { status: 200 }
     );
-
-    // Set token in cookie
-    response.cookies.set({
-      name: 'admin_token',
-      value: jwtToken,
-      httpOnly: false,
-      secure: false,
-      sameSite: 'lax',
-      maxAge: 24 * 60 * 60, // 24 hours
-      path: '/',
-    });
-
-    return response;
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(

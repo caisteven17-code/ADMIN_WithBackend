@@ -35,25 +35,18 @@ export default function Login() {
         return;
       }
 
-      // Store token and admin info in localStorage for client-side verification
-      if (data.token) {
-        localStorage.setItem('admin_token', data.token);
+      // Credentials verified, OTP has been sent
+      // Redirect to OTP verification page
+      if (data.requiresOtp && data.email) {
+        // Small delay to ensure state updates
+        setTimeout(() => {
+          router.push(`/verify?email=${encodeURIComponent(data.email)}`);
+        }, 100);
+      } else {
+        // Fallback - shouldn't happen with current flow
+        setError("Unexpected response from server");
+        setLoading(false);
       }
-
-      // Store admin info for display in header
-      if (data.admin) {
-        localStorage.setItem('admin_info', JSON.stringify({
-          id: data.admin.id,
-          email: data.admin.email,
-          name: data.admin.name,
-        }));
-      }
-
-      // Small delay to ensure cookie is set before redirecting
-      // This allows the middleware to see the token on the next request
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 100);
     } catch (err) {
       setError("An error occurred during login");
       console.error(err);
