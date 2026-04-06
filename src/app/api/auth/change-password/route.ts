@@ -3,13 +3,11 @@ import { supabaseServer, validateServerConfig } from '@/lib/supabase/server';
 import { jwtVerify } from 'jose';
 
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'your-secret-key-change-in-production'
+  process.env.JWT_SECRET || 'hopecard-admin-secret-key-change-in-production'
 );
 
 export async function POST(request: NextRequest) {
   try {
-    validateServerConfig();
-
     const { currentPassword, newPassword, confirmPassword, token: tokenFromBody } =
       await request.json();
 
@@ -31,7 +29,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify JWT token
-    const verified = await jwtVerify(token, JWT_SECRET);
+    let verified;
+    try {
+      verified = await jwtVerify(token, JWT_SECRET);
+    } catch (jwtError) {
+      console.error('JWT verification error:', jwtError);
+      return NextResponse.json(
+        { error: 'Invalid or expired session' },
+        { status: 401 }
+      );
+    }
+
     const userId = verified.payload.sub as string;
 
     // Validate input
@@ -56,54 +64,80 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get admin email to verify current password
-    const { data: adminData, error: adminError } = await supabaseServer
-      .from('admins')
-      .select('email')
-      .eq('id', userId)
-      .single();
-
-    if (adminError || !adminData) {
+    // Demo mode: accept the change without verifying against Supabase
+    if (userId && userId.startsWith('demo-admin-')) {
+      console.log('Demo mode: Password change accepted for demo user');
       return NextResponse.json(
-        { error: 'Admin not found' },
-        { status: 404 }
+        {
+          success: true,
+          message: 'Password changed successfully (demo mode)',
+        },
+        { status: 200 }
       );
     }
 
-    // Verify current password
-    const { error: signInError } = await supabaseServer.auth.signInWithPassword({
-      email: adminData.email,
-      password: currentPassword,
-    });
+    // Production mode: verify with Supabase
+    try {
+      validateServerConfig();
 
-    if (signInError) {
-      return NextResponse.json(
-        { error: 'Current password is incorrect' },
-        { status: 401 }
+      // Get admin email to verify current password
+      const { data: adminData, error: adminError } = await supabaseServer
+        .from('admins')
+        .select('email')
+        .eq('id', userId)
+        .single();
+
+      if (adminError || !adminData) {
+        return NextResponse.json(
+          { error: 'Admin not found' },
+          { status: 404 }
+        );
+      }
+
+      // Verify current password
+      const { error: signInError } = await supabaseServer.auth.signInWithPassword({
+        email: adminData.email,
+        password: currentPassword,
+      });
+
+      if (signInError) {
+        return NextResponse.json(
+          { error: 'Current password is incorrect' },
+          { status: 401 }
+        );
+      }
+
+      // Update password using admin API
+      const { error: updateError } = await supabaseServer.auth.admin.updateUserById(
+        userId,
+        { password: newPassword }
       );
-    }
 
-    // Update password using admin API
-    const { error: updateError } = await supabaseServer.auth.admin.updateUserById(
-      userId,
-      { password: newPassword }
-    );
+      if (updateError) {
+        console.error('Password update error:', updateError);
+        return NextResponse.json(
+          { error: 'Failed to update password' },
+          { status: 500 }
+        );
+      }
 
-    if (updateError) {
-      console.error('Password update error:', updateError);
       return NextResponse.json(
-        { error: 'Failed to update password' },
+        {
+          success: true,
+          message: 'Password changed successfully',
+        },
+        { status: 200 }
+      );
+    } catch (supabaseError) {
+      console.error('Supabase error in password change:', supabaseError);
+      return NextResponse.json(
+        {
+          error: 'Supabase not configured. Change password works in demo mode only.',
+          details: supabaseError instanceof Error ? supabaseError.message : String(supabaseError)
+        },
         { status: 500 }
       );
     }
-
-    return NextResponse.json(
-      {
-        success: true,
-        message: 'Password changed successfully',
-      },
-      { status: 200 }
-    );
   } catch (error) {
     console.error('Change password error:', error);
     return NextResponse.json(
