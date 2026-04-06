@@ -35,9 +35,18 @@ export default function Login() {
         return;
       }
 
-      // Store token in localStorage for client-side verification
+      // Store token and admin info in localStorage for client-side verification
       if (data.token) {
         localStorage.setItem('admin_token', data.token);
+      }
+
+      // Store admin info for display in header
+      if (data.admin) {
+        localStorage.setItem('admin_info', JSON.stringify({
+          id: data.admin.id,
+          email: data.admin.email,
+          name: data.admin.name,
+        }));
       }
 
       // Login successful, redirect to dashboard

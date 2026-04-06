@@ -71,6 +71,20 @@ export default function Verify() {
         return;
       }
 
+      // Store token and admin info in localStorage
+      if (data.token) {
+        localStorage.setItem('admin_token', data.token);
+      }
+
+      // Store admin info for display in header
+      if (data.admin) {
+        localStorage.setItem('admin_info', JSON.stringify({
+          id: data.admin.id,
+          email: data.admin.email,
+          name: data.admin.name,
+        }));
+      }
+
       // Verification successful, redirect to dashboard
       router.push("/dashboard");
     } catch (err) {

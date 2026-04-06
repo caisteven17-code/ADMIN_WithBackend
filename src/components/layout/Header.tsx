@@ -28,15 +28,31 @@ const getNotificationIcon = (type: string) => {
 export default function Header() {
   const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [adminName, setAdminName] = useState("Admin User");
+  const [adminEmail, setAdminEmail] = useState("");
 
   const unreadCount = notifications.filter((n) => !n.read).length;
-  
+
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
+
+  // Load admin info from localStorage on mount
+  useEffect(() => {
+    const adminInfo = localStorage.getItem('admin_info');
+    if (adminInfo) {
+      try {
+        const parsed = JSON.parse(adminInfo);
+        setAdminName(parsed.name || "Admin User");
+        setAdminEmail(parsed.email || "");
+      } catch (error) {
+        console.error('Failed to parse admin info:', error);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -51,7 +67,20 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // Clear session data
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_info');
+
+    // Call logout endpoint
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+
     router.push("/login");
   };
 
@@ -72,7 +101,7 @@ export default function Header() {
       <header className={styles.header}>
         <div className={styles.pageTitle}>
           <h2>Admin Portal</h2>
-          <p>Welcome back, Administrator</p>
+          <p>Welcome back, {adminName}</p>
         </div>
 
         <div className={styles.userSection}>
@@ -119,8 +148,8 @@ export default function Header() {
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             >
               <div className={styles.profileInfo}>
-                <span className={styles.profileName}>Admin User</span>
-                <span className={styles.profileRole}>Administrator</span>
+                <span className={styles.profileName}>{adminName}</span>
+                <span className={styles.profileRole}>{adminEmail || "Administrator"}</span>
               </div>
               <div className={styles.avatar}>
                 <User size={18} color="white" />
