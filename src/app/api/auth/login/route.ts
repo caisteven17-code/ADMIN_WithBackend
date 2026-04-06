@@ -1,18 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer, validateServerConfig } from '@/lib/supabase/server';
 import { generateOTP } from '@/lib/auth';
-
-// Email service placeholder
-const emailService = {
-  sendEmail: async (to: string, subject: string, text: string) => {
-    console.log(`\n📧 EMAIL SENT`);
-    console.log(`To: ${to}`);
-    console.log(`Subject: ${subject}`);
-    console.log(`Message: ${text}`);
-    console.log(`---\n`);
-    return true;
-  },
-};
+import { sendOTPEmail } from '@/lib/email';
 
 export async function POST(request: NextRequest) {
   try {
@@ -78,12 +67,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Send OTP via email
-    const emailSent = await emailService.sendEmail(
-      email,
-      'Your HopeCard Admin OTP',
-      `Your one-time password is: ${otp}\n\nThis code will expire in 10 minutes.\n\nIf you did not request this, please ignore this email.`
-    );
+    // Send OTP via email using Google SMTP
+    const emailSent = await sendOTPEmail(email, otp);
 
     if (!emailSent) {
       return NextResponse.json(
