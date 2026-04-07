@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Users, CheckCircle, DollarSign, Target } from "lucide-react";
 import { dashboardStats, recentActivities } from "@/lib/mockData";
+import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import styles from "./page.module.css";
 
 // Helper function to render the correct icon
@@ -31,7 +32,8 @@ export default function Dashboard() {
   });
 
   return (
-    <div className={styles.dashboardContainer}>
+    <ProtectedRoute>
+      <div className={styles.dashboardContainer}>
       <header className={styles.header}>
         <h1 className={styles.title}>Dashboard Overview</h1>
         <p className={styles.subtitle}>Monitor your platform activity and key metrics</p>
@@ -90,5 +92,6 @@ export default function Dashboard() {
         </div>
       </section>
     </div>
+    </ProtectedRoute>
   );
 }
