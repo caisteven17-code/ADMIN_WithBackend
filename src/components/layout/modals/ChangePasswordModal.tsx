@@ -13,13 +13,92 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Frontend mock: just close the modal when they submit
-    onClose();
+    setError("");
+    setSuccess("");
+    setLoading(true);
+
+    // Validation
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setError("All fields are required");
+      setLoading(false);
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setError("New passwords do not match");
+      setLoading(false);
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setError("New password must be at least 8 characters");
+      setLoading(false);
+      return;
+    }
+
+    if (currentPassword === newPassword) {
+      setError("New password must be different from current password");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Get token from localStorage
+      const token = localStorage.getItem('admin_token');
+
+      const response = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { "Authorization": `Bearer ${token}` }),
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+          confirmPassword,
+          token, // Also send in body as fallback
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "Failed to change password");
+        setLoading(false);
+        return;
+      }
+
+      setSuccess("Password changed successfully!");
+
+      // Reset form
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setShowCurrent(false);
+      setShowNew(false);
+      setShowConfirm(false);
+
+      // Close modal after 2 seconds
+      setTimeout(() => {
+        onClose();
+        setSuccess("");
+      }, 2000);
+    } catch (err) {
+      setError("An error occurred while changing password");
+      console.error(err);
+      setLoading(false);
+    }
   };
 
   return (
@@ -36,6 +115,34 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
+          {error && (
+            <div style={{
+              backgroundColor: "#fee2e2",
+              border: "1px solid #fca5a5",
+              borderRadius: "6px",
+              padding: "0.75rem",
+              color: "#9b2c2c",
+              fontSize: "0.9rem",
+              marginBottom: "1rem"
+            }}>
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div style={{
+              backgroundColor: "#dcfce7",
+              border: "1px solid #86efac",
+              borderRadius: "6px",
+              padding: "0.75rem",
+              color: "#166534",
+              fontSize: "0.9rem",
+              marginBottom: "1rem"
+            }}>
+              {success}
+            </div>
+          )}
+
           <div className={styles.inputGroup}>
             <label>Current Password</label>
             <div className={styles.inputWrapper}>
@@ -44,11 +151,15 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                 placeholder="Enter current password"
                 required
                 className={styles.input}
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                disabled={loading}
               />
-              <button 
-                type="button" 
-                className={styles.eyeBtn} 
+              <button
+                type="button"
+                className={styles.eyeBtn}
                 onClick={() => setShowCurrent(!showCurrent)}
+                disabled={loading}
               >
                 {showCurrent ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -60,14 +171,18 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
             <div className={styles.inputWrapper}>
               <input
                 type={showNew ? "text" : "password"}
-                placeholder="Enter new password"
+                placeholder="Enter new password (min 8 characters)"
                 required
                 className={styles.input}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                disabled={loading}
               />
-              <button 
-                type="button" 
-                className={styles.eyeBtn} 
+              <button
+                type="button"
+                className={styles.eyeBtn}
                 onClick={() => setShowNew(!showNew)}
+                disabled={loading}
               >
                 {showNew ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -82,11 +197,15 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                 placeholder="Confirm new password"
                 required
                 className={styles.input}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                disabled={loading}
               />
-              <button 
-                type="button" 
-                className={styles.eyeBtn} 
+              <button
+                type="button"
+                className={styles.eyeBtn}
                 onClick={() => setShowConfirm(!showConfirm)}
+                disabled={loading}
               >
                 {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -94,11 +213,11 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
           </div>
 
           <div className={styles.footer}>
-            <button type="button" onClick={onClose} className={styles.cancelBtn}>
+            <button type="button" onClick={onClose} className={styles.cancelBtn} disabled={loading}>
               Cancel
             </button>
-            <button type="submit" className={styles.submitBtn}>
-              Update Password
+            <button type="submit" className={styles.submitBtn} disabled={loading}>
+              {loading ? "Updating..." : "Update Password"}
             </button>
           </div>
         </form>
