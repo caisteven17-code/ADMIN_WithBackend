@@ -20,76 +20,42 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    // Call backend API to handle login and trigger OTP
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+    const backendResponse = await fetch(`${backendUrl}/api/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
     });
 
-    if (signInError) {
-      console.log('❌ Auth failed:', signInError.message);
+    const backendData = await backendResponse.json();
+
+    if (!backendResponse.ok) {
+      console.log('❌ Backend login failed:', backendData.error);
       return NextResponse.json(
-        { error: `Invalid email or password: ${signInError.message}` },
-        { status: 401 }
+        { error: backendData.error || 'Login failed' },
+        { status: backendResponse.status }
       );
     }
 
-    console.log('✅ Login successful:', email);
+    console.log('✅ Login successful, OTP should be sent:', email);
 
-    // OTP DISABLED: Skip OTP and directly create JWT token
-    console.log('⚠️  OTP is currently disabled - proceeding with direct authentication');
-
-    // Get user from Supabase Auth
-    const { data: { users }, error: usersError } = await createClient(
-      SUPABASE_URL,
-      SUPABASE_SERVICE_ROLE_KEY
-    ).auth.admin.listUsers();
-
-    let adminUser = null;
-    if (!usersError && users) {
-      adminUser = users.find(u => u.email === email);
-    }
-
-    if (!adminUser) {
-      adminUser = {
-        id: email.replace('@', '-').replace('.', '-'),
-        email: email,
-        user_metadata: { name: 'Admin User' },
-      };
-    }
-
-    // Create JWT token directly (skip OTP verification)
-    const jwtToken = await createJWT(adminUser.id, adminUser.email || email);
-
-    // Create response with token in cookie
-    const response = NextResponse.json(
+    // OTP ENABLED: Backend has sent OTP, frontend will redirect to verify page
+    return NextResponse.json(
       {
         success: true,
-        message: 'Login successful',
-        token: jwtToken,
-        admin_info: {
-          id: adminUser.id,
-          email: adminUser.email,
-          name: adminUser.user_metadata?.name || 'Admin User',
-        },
+        message: 'Login successful. Check your email for OTP.',
+        email: email,
+        requiresOtp: true,
       },
       { status: 200 }
     );
-
-    // Set token in secure HTTP-only cookie (24h expiry)
-    response.cookies.set('admin_token', jwtToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: 86400, // 24 hours
-    });
-
-    return response;
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'An error occurred during login' },
       { status: 500 }
     );
   }

@@ -39,14 +39,23 @@ export async function POST(request: NextRequest) {
     // Generate OTP
     const otp = generateOTP();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const now = Date.now();
 
-    // Store OTP in database
+    // Delete any previous unused OTPs for this email (prevents conflicts)
+    await supabaseServer
+      .from('otp_sessions')
+      .delete()
+      .eq('email', email)
+      .eq('used', false);
+
+    // Store OTP in database with correct columns (milliseconds format)
     const { error: otpError } = await supabaseServer
       .from('otp_sessions')
       .insert({
         email,
         otp,
-        expires_at: expiresAt.toISOString(),
+        expires_at_ms: expiresAt.getTime(), // Convert to milliseconds
+        created_at_ms: now,
         used: false,
       });
 

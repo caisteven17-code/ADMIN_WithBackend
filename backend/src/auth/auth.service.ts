@@ -51,12 +51,12 @@ export class AuthService {
       // Generate OTP
       const otp = this.generateOTP();
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+      const expiresAtMs = expiresAt.getTime(); // Convert to milliseconds
 
       console.log(`[AUTH] Generated OTP: ${otp}`);
 
       // Store OTP in database - delete old unused OTPs for this email first
       let otpError: any = null;
-      const expiresAtMs = expiresAt.getTime(); // Convert to milliseconds
       
       // Delete any previous unused OTPs for this email (prevents conflicts)
       await supabase
@@ -71,27 +71,12 @@ export class AuthService {
           email,
           otp,
           expires_at_ms: expiresAtMs,
-          used: false,
           created_at_ms: Date.now(),
+          used: false,
         });
 
       if (error1) {
-        console.log(`[AUTH] ⚠️ Insert with all columns failed, trying alternative...`);
-        // Try alternative column structure if needed
-        const { error: error2 } = await supabase
-          .from("otp_sessions")
-          .insert({
-            email,
-            otp,
-            expires_at_ms: expiresAtMs,
-            used: false,
-            created_at_ms: Date.now(),
-          });
-        otpError = error2 || error1;
-      }
-
-      if (otpError) {
-        console.error(`[AUTH] ❌ OTP storage error:`, otpError);
+        console.error(`[AUTH] ❌ OTP storage error:`, error1);
         return {
           success: false,
           error: "Failed to generate OTP",
@@ -140,53 +125,83 @@ export class AuthService {
       // Verify OTP from database - check expires_at_ms (milliseconds)
       const now = Date.now();
       console.log(`[AUTH] Current time: ${now}`);
+      console.log(`[AUTH] Looking for OTP: email=${email}, otp=${otp}, used=false, expires_at_ms>${now}`);
       
-      const { data: otpData, error: otpError } = await supabase
-        .from("otp_sessions")
-        .select("*")
-        .eq("email", email)
-        .eq("otp", otp)
-        .eq("used", false)
-        .gt("expires_at_ms", now)
-        .single();
+      try {
+        console.log(`[AUTH] Attempting to query OTP...`);
+        
+        // Try a simple test query first
+        const { data: testData, error: testError } = await supabase
+          .from("otp_sessions")
+          .select("id, email, otp, used")
+          .eq("email", email)
+          .limit(5);
 
-      if (otpError) {
-        console.error(`[AUTH] ❌ OTP query error:`, otpError.message);
+        console.log(`[AUTH] Test query error:`, testError);
+        console.log(`[AUTH] Test query found ${testData?.length || 0} records for ${email}`);
+
+        if (testData && testData.length > 0) {
+          testData.forEach((record: any) => {
+            console.log(`[AUTH] Found record: otp=${record.otp}, used=${record.used}`);
+          });
+        }
+
+        // Now try the full query
+        const { data: otpData, error: otpError } = await supabase
+          .from("otp_sessions")
+          .select("*")
+          .eq("email", email)
+          .eq("otp", otp.toString())
+          .eq("used", false)
+          .gt("expires_at_ms", now);
+
+        console.log(`[AUTH] Final query error:`, otpError);
+        console.log(`[AUTH] Final query data count:`, otpData?.length || 0);
+
+        if (otpError) {
+          console.error(`[AUTH] ❌ OTP query error details:`, {
+            message: otpError.message,
+            code: otpError.code,
+            details: otpError.details,
+            hint: otpError.hint,
+          });
+          return {
+            success: false,
+            error: "Invalid or expired OTP",
+          };
+        }
+
+        if (!otpData || otpData.length === 0) {
+          console.log(`[AUTH] ❌ No OTP record found for ${email} with OTP ${otp}`);
+          return {
+            success: false,
+            error: "Invalid or expired OTP",
+          };
+        }
+
+        const otp_record = otpData[0];
+        console.log(`[AUTH] ✅ OTP record found:`, otp_record);
+        
+        // Mark OTP as used
+        const { error: updateError } = await supabase
+          .from("otp_sessions")
+          .update({ used: true })
+          .eq("id", otp_record.id);
+
+        if (updateError) {
+          console.error(`[AUTH] ❌ Failed to mark OTP as used:`, updateError);
+        }
+
+        console.log(`[AUTH] ✅ OTP verified for ${email}`);
+      } catch (error) {
+        console.error(`[AUTH] ❌ OTP verification exception:`, error);
         return {
           success: false,
-          error: "Invalid or expired OTP",
+          error: "Failed to verify OTP",
         };
       }
 
-      if (!otpData) {
-        console.log(`[AUTH] ❌ No OTP record found`);
-        return {
-          success: false,
-          error: "Invalid or expired OTP",
-        };
-      }
-
-      console.log(`[AUTH] ✅ OTP record found, marking as used...`);
-      
-      // Mark OTP as used
-      const { error: updateError } = await supabase
-        .from("otp_sessions")
-        .update({ used: true })
-        .eq("id", otpData.id);
-
-      if (updateError) {
-        console.error(`[AUTH] ❌ Failed to mark OTP as used:`, updateError);
-      }
-
-      console.log(`[AUTH] ✅ OTP found in database, marking as used`);
-
-      // Mark OTP as used
-      await supabase
-        .from("otp_sessions")
-        .update({ used: true })
-        .eq("id", otpData.id);
-
-      console.log(`[AUTH] ✅ OTP verified for ${email}`);
+      // Get admin data continues below
 
       // Get admin data from Supabase auth
       const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
