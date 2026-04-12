@@ -3,11 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "preinstall": "node scripts/check-node-version.js",
+    "postinstall": "npm run setup:all && node scripts/setup-env.js",
+    "setup:all": "npm run setup:backend",
+    "setup:backend": "cd backend && npm install",
+    "dev": "node scripts/check-env.js && concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
     "dev:frontend": "next dev",
     "dev:backend": "cd backend && npm run dev",
-    "build": "next build",
-    "start": "next start",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "next build",
+    "build:backend": "cd backend && npm run build",
+    "start": "concurrently \"next start\" \"cd backend && npm start\"",
     "lint": "eslint"
   },
   "dependencies": {

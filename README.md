@@ -2,22 +2,39 @@
 
 A modern administrative dashboard for managing digital donors, beneficiaries, and donation campaigns.
 
+---
 
-## 🚀 Getting Started
-
-### 1. Prerequisites
-Ensure you have **Node.js 18.x** or later installed on your machine.
-
-### 2. Installation
-Clone the repository and install the dependencies:
+## ⚡ Quick Start (2 Commands)
 
 ```bash
-# Install dependencies
 npm install
+npm run dev
+```
 
-# If you encounter peer dependency issues:
-npm install --legacy-peer-deps
+That's it! 🎉 Both frontend and backend will start automatically.
 
+- Frontend: http://localhost:3000
+- Backend: http://localhost:5000
 
-username: admin@hopecard.com
-password: admin123
+> **First time?** See [QUICK_START.md](QUICK_START.md) for environment setup
+
+---
+
+## 📖 Full Documentation
+
+- [**QUICK_START.md**](QUICK_START.md) - 2-command setup guide
+- [**SETUP_GUIDE.md**](SETUP_GUIDE.md) - Complete step-by-step instructions  
+- [**Backend README**](backend/README.md) - Backend API documentation
+- [**Backend Setup**](BACKEND_SETUP.md) - Architecture details
+
+---
+
+## ⚠️ What This App Needs
+
+This is a **full-stack application**. It requires:
+- ✅ Frontend (Next.js) on port 3000
+- ✅ Backend (NestJS) on port 5000
+- ✅ Supabase database
+- ✅ Gmail for sending OTP emails
+
+Both frontend and backend start automatically with `npm run dev`

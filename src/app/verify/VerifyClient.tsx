@@ -14,7 +14,7 @@ export default function VerifyClient() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
-  const [resendCount, setResendCount] = useState(0);
+  const [resendCount, setResendCount] = useState(600); // 10 minutes for initial OTP
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const email = searchParams.get("email") || "";
@@ -26,6 +26,9 @@ export default function VerifyClient() {
       setTimeout(() => {
         router.push("/login");
       }, 2000);
+    } else {
+      // Start the countdown for the initial OTP (10 minutes)
+      setResendCount(600);
     }
   }, [email, router]);
 
@@ -132,6 +135,7 @@ export default function VerifyClient() {
 
       // Reset OTP inputs and start timer
       setOtp(["", "", "", "", "", ""]);
+      setResendLoading(false);
       setResendCount(60);
     } catch (err) {
       setError("Failed to resend OTP");
@@ -142,13 +146,13 @@ export default function VerifyClient() {
 
   // Countdown timer for resend button
   useEffect(() => {
-    if (resendCount > 0) {
-      const timer = setTimeout(() => {
-        setResendCount(resendCount - 1);
-        setResendLoading(false);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
+    if (resendCount <= 0) return;
+
+    const interval = setInterval(() => {
+      setResendCount(prev => Math.max(0, prev - 1));
+    }, 1000);
+
+    return () => clearInterval(interval);
   }, [resendCount]);
 
   return (
@@ -213,25 +217,27 @@ export default function VerifyClient() {
               className={styles.verifyBtn}
               disabled={loading}
             >
-              {loading ? "Verifying..." : "Verify Code"}
+              {loading ? "Verifying..." : "Verify"}
             </button>
           </form>
 
           <div className={styles.resendSection}>
-            <p>Didn't receive the code?</p>
-            {resendCount > 0 ? (
-              <span className={styles.resendTimer}>
-                Resend in {resendCount}s
-              </span>
-            ) : (
-              <button
-                onClick={handleResend}
-                disabled={resendLoading}
-                className={styles.resendBtn}
-              >
-                {resendLoading ? "Sending..." : "Resend Code"}
-              </button>
-            )}
+            <p>
+              Didn't receive the code?{" "}
+              {resendCount > 0 ? (
+                <span className={styles.resendTimer}>
+                  Resend ({Math.floor(resendCount / 60)}:{String(resendCount % 60).padStart(2, '0')})
+                </span>
+              ) : (
+                <button
+                  onClick={handleResend}
+                  disabled={resendLoading}
+                  className={styles.resendBtn}
+                >
+                  {resendLoading ? "Sending..." : "Resend"}
+                </button>
+              )}
+            </p>
           </div>
 
           <div className={styles.backToLogin}>
