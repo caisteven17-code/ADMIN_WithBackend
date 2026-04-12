@@ -17,16 +17,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if email exists in admins table
-    const { data: adminData, error: adminError } = await supabaseServer
-      .from('admins')
-      .select('id, email')
-      .eq('email', email)
-      .single();
+    // Check if email exists in Supabase Auth
+    const { data: { users }, error: usersError } = await supabaseServer.auth.admin.listUsers();
 
-    if (adminError || !adminData) {
+    if (usersError || !users) {
       return NextResponse.json(
-        { error: 'Email not found in admin list' },
+        { error: 'Failed to verify email' },
+        { status: 500 }
+      );
+    }
+
+    const authUser = users.find(u => u.email === email);
+
+    if (!authUser) {
+      return NextResponse.json(
+        { error: 'Email not found' },
         { status: 404 }
       );
     }

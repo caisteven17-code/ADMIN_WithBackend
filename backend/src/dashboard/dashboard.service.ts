@@ -5,18 +5,21 @@ import { DashboardMetrics } from "./interfaces/dashboard-metrics.interface";
 @Injectable()
 export class DashboardService {
   /**
-   * Get total count of beneficiaries
+   * Get total count of beneficiaries from user_profiles table
    */
   private async getTotalBeneficiaries(): Promise<number> {
     try {
-      const { count, error } = await supabase
-        .from("beneficiaries")
-        .select("id", { count: "exact", head: true });
+      const { count, error, data } = await supabase
+        .from("user_profiles")
+        .select("*", { count: "exact", head: false })
+        .eq("role", "beneficiary");
 
       if (error) {
         console.error("Supabase error fetching total beneficiaries:", error);
         return 0;
       }
+      console.log("✅ Total beneficiaries count:", count);
+      console.log("📊 Sample data:", data?.slice(0, 3));
       return count || 0;
     } catch (error) {
       console.error("Error fetching total beneficiaries:", error);
@@ -25,20 +28,26 @@ export class DashboardService {
   }
 
   /**
-   * Get count of pending approvals (beneficiaries with status 'pending')
+   * Get count of pending approvals (users with no last_sign_in_at)
+   * Users who haven't logged in yet are considered pending approval
    */
   private async getPendingApprovals(): Promise<number> {
     try {
-      const { count, error } = await supabase
-        .from("beneficiaries")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "pending");
+      // Query auth.users table for users with no last login
+      const { data, error } = await supabase.auth.admin.listUsers();
 
       if (error) {
         console.error("Supabase error fetching pending approvals:", error);
         return 0;
       }
-      return count || 0;
+
+      // Count users who have never logged in (last_sign_in_at is null)
+      const pendingCount = data.users.filter(
+        (user) => user.last_sign_in_at === null
+      ).length;
+
+      console.log("🔍 Pending approvals (no last login):", pendingCount);
+      return pendingCount;
     } catch (error) {
       console.error("Error fetching pending approvals:", error);
       return 0;
@@ -85,6 +94,7 @@ export class DashboardService {
         console.error("Supabase error fetching active campaigns:", error);
         return 0;
       }
+      console.log("✅ Active campaigns count:", count);
       return count || 0;
     } catch (error) {
       console.error("Error fetching active campaigns:", error);
@@ -118,17 +128,11 @@ export class DashboardService {
           this.getActiveCampaigns(),
         ]);
 
-      // If all metrics are 0 or empty, it likely means Supabase connection failed
-      // Return fallback mock data in this case
-      if (totalBeneficiaries === 0 && pendingApprovals === 0 && totalDonationsSent === "₱0" && activeCampaigns === 0) {
-        console.warn("All dashboard metrics are 0 - using fallback mock data");
-        return {
-          totalBeneficiaries: 1234,
-          pendingApprovals: 47,
-          totalDonationsSent: "₱2.5M",
-          activeCampaigns: 18,
-        };
-      }
+      console.log("📊 Dashboard Metrics Retrieved:");
+      console.log(`  - Total Beneficiaries: ${totalBeneficiaries}`);
+      console.log(`  - Pending Approvals: ${pendingApprovals}`);
+      console.log(`  - Total Donations Sent: ${totalDonationsSent}`);
+      console.log(`  - Active Campaigns: ${activeCampaigns}`);
 
       return {
         totalBeneficiaries,
@@ -137,8 +141,8 @@ export class DashboardService {
         activeCampaigns,
       };
     } catch (error) {
-      console.error("Error fetching dashboard metrics:", error);
-      // Return fallback mock data
+      console.error("❌ Error fetching dashboard metrics:", error);
+      // Return fallback mock data only on error
       return {
         totalBeneficiaries: 1234,
         pendingApprovals: 47,

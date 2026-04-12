@@ -22,29 +22,90 @@ export default function ReviewBeneficiaryApprovalModal({
   const [bankVerified, setBankVerified] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectForm, setShowRejectForm] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   if (!beneficiaryData) return null;
 
-  const handleApprove = () => {
+  const handleApprove = async () => {
     if (!idVerified || !bankVerified) {
       alert("Please verify both Identity Document and Bank Account Details before approving");
       return;
     }
-    const updatedBeneficiary = { ...beneficiaryData, docs: idVerified, bank: bankVerified, status: "Approved" };
-    if (onUpdate) onUpdate(updatedBeneficiary);
-    alert(`Approved: ${beneficiaryData.name}`);
-    onClose();
+
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('admin_token');
+      const adminInfoStr = localStorage.getItem('admin_info') || '{}';
+      const adminInfo = JSON.parse(adminInfoStr);
+      const adminId = adminInfo.id || 'admin';
+
+      const response = await fetch(`/api/approvals/beneficiaries/${beneficiaryData.id}/approve`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ adminId }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        alert(`Failed to approve: ${error.message || 'Unknown error'}`);
+        return;
+      }
+
+      const result = await response.json();
+      const updatedBeneficiary = { ...beneficiaryData, status: "Approved" };
+      if (onUpdate) onUpdate(updatedBeneficiary);
+      alert(`Successfully approved: ${beneficiaryData.name}`);
+      onClose();
+    } catch (error) {
+      console.error('Error approving beneficiary:', error);
+      alert('Error approving beneficiary. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleReject = () => {
+  const handleReject = async () => {
     if (!rejectionReason.trim()) {
       alert("Please provide a rejection reason");
       return;
     }
-    const updatedBeneficiary = { ...beneficiaryData, docs: idVerified, bank: bankVerified, status: "Rejected" };
-    if (onUpdate) onUpdate(updatedBeneficiary);
-    alert(`Rejected: ${beneficiaryData.name}\nReason: ${rejectionReason}`);
-    onClose();
+
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('admin_token');
+      const adminInfoStr = localStorage.getItem('admin_info') || '{}';
+      const adminInfo = JSON.parse(adminInfoStr);
+      const adminId = adminInfo.id || 'admin';
+
+      const response = await fetch(`/api/approvals/beneficiaries/${beneficiaryData.id}/reject`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ adminId, reason: rejectionReason }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        alert(`Failed to reject: ${error.message || 'Unknown error'}`);
+        return;
+      }
+
+      const result = await response.json();
+      const updatedBeneficiary = { ...beneficiaryData, status: "Rejected" };
+      if (onUpdate) onUpdate(updatedBeneficiary);
+      alert(`Successfully rejected: ${beneficiaryData.name}\nReason: ${rejectionReason}`);
+      onClose();
+    } catch (error) {
+      console.error('Error rejecting beneficiary:', error);
+      alert('Error rejecting beneficiary. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -142,19 +203,35 @@ export default function ReviewBeneficiaryApprovalModal({
         <div className={styles.actions}>
           {!showRejectForm ? (
             <>
-              <button className={styles.approveBtn} onClick={handleApprove}>
-                Approve
+              <button 
+                className={styles.approveBtn} 
+                onClick={handleApprove}
+                disabled={loading}
+              >
+                {loading ? "Processing..." : "Approve"}
               </button>
-              <button className={styles.rejectBtn} onClick={() => setShowRejectForm(true)}>
+              <button 
+                className={styles.rejectBtn} 
+                onClick={() => setShowRejectForm(true)}
+                disabled={loading}
+              >
                 Reject
               </button>
             </>
           ) : (
             <>
-              <button className={styles.approveBtn} onClick={handleReject}>
-                Confirm Reject
+              <button 
+                className={styles.approveBtn} 
+                onClick={handleReject}
+                disabled={loading}
+              >
+                {loading ? "Processing..." : "Confirm Reject"}
               </button>
-              <button className={styles.cancelBtn} onClick={() => setShowRejectForm(false)}>
+              <button 
+                className={styles.cancelBtn} 
+                onClick={() => setShowRejectForm(false)}
+                disabled={loading}
+              >
                 Cancel
               </button>
             </>

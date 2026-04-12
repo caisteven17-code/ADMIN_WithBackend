@@ -1,20 +1,36 @@
 import nodemailer from 'nodemailer';
 
-// Email service configuration
-const emailConfig = {
-  service: 'gmail',
-  auth: {
-    user: process.env.GMAIL_EMAIL || '',
-    pass: process.env.GMAIL_APP_PASSWORD || '',
-  },
-};
+// Email service configuration - supports both Gmail and generic SMTP
+function createEmailConfig() {
+  // Check if using generic SMTP
+  if (process.env.SMTP_HOST && process.env.SMTP_PORT) {
+    return {
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT),
+      secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+      auth: {
+        user: process.env.SMTP_USER || '',
+        pass: process.env.SMTP_PASSWORD || '',
+      },
+    };
+  }
+
+  // Fall back to Gmail if SMTP not configured
+  return {
+    service: 'gmail',
+    auth: {
+      user: process.env.GMAIL_EMAIL || '',
+      pass: process.env.GMAIL_APP_PASSWORD || '',
+    },
+  };
+}
 
 // Create transporter
 let transporter: nodemailer.Transporter | null = null;
 
 function getTransporter() {
   if (!transporter) {
-    transporter = nodemailer.createTransport(emailConfig);
+    transporter = nodemailer.createTransport(createEmailConfig());
   }
   return transporter;
 }
@@ -25,8 +41,11 @@ function getTransporter() {
 export async function sendOTPEmail(to: string, otp: string): Promise<boolean> {
   try {
     // Check if email credentials are configured
-    if (!process.env.GMAIL_EMAIL || !process.env.GMAIL_APP_PASSWORD) {
-      console.warn('Gmail credentials not configured. Logging OTP to console instead.');
+    const hasSmtp = process.env.SMTP_HOST && process.env.SMTP_PORT;
+    const hasGmail = process.env.GMAIL_EMAIL && process.env.GMAIL_APP_PASSWORD;
+
+    if (!hasSmtp && !hasGmail) {
+      console.warn('Email credentials not configured. Logging OTP to console instead.');
       console.log(`\n📧 OTP EMAIL (Console Fallback)`);
       console.log(`To: ${to}`);
       console.log(`OTP: ${otp}`);
@@ -35,9 +54,10 @@ export async function sendOTPEmail(to: string, otp: string): Promise<boolean> {
     }
 
     const transporter = getTransporter();
+    const fromEmail = process.env.SMTP_FROM || process.env.GMAIL_EMAIL || 'noreply@hopecard.com';
 
     const mailOptions = {
-      from: process.env.GMAIL_EMAIL,
+      from: fromEmail,
       to: to,
       subject: 'Your HopeCard Admin OTP',
       html: `
@@ -47,7 +67,7 @@ export async function sendOTPEmail(to: string, otp: string): Promise<boolean> {
           <h1 style="color: #9b2c2c; letter-spacing: 5px; font-size: 32px; text-align: center; margin: 20px 0;">
             ${otp}
           </h1>
-          <p><strong>This code will expire in 10 minutes.</strong></p>
+          <p><strong>This code will expire in 1 hour.</strong></p>
           <p style="color: #666; font-size: 14px;">
             If you did not request this code, please ignore this email and do not share it with anyone.
           </p>
@@ -61,7 +81,8 @@ export async function sendOTPEmail(to: string, otp: string): Promise<boolean> {
 
     const info = await transporter.sendMail(mailOptions);
     
-    console.log(`\n📧 EMAIL SENT via Gmail`);
+    const emailProvider = process.env.SMTP_HOST ? 'SMTP' : 'Gmail';
+    console.log(`\n📧 EMAIL SENT via ${emailProvider}`);
     console.log(`To: ${to}`);
     console.log(`Message ID: ${info.messageId}`);
     console.log(`---\n`);
@@ -78,8 +99,11 @@ export async function sendOTPEmail(to: string, otp: string): Promise<boolean> {
  */
 export async function sendPasswordResetEmail(to: string, resetLink: string): Promise<boolean> {
   try {
-    if (!process.env.GMAIL_EMAIL || !process.env.GMAIL_APP_PASSWORD) {
-      console.warn('Gmail credentials not configured. Logging password reset link to console instead.');
+    const hasSmtp = process.env.SMTP_HOST && process.env.SMTP_PORT;
+    const hasGmail = process.env.GMAIL_EMAIL && process.env.GMAIL_APP_PASSWORD;
+
+    if (!hasSmtp && !hasGmail) {
+      console.warn('Email credentials not configured. Logging password reset link to console instead.');
       console.log(`\n📧 PASSWORD RESET EMAIL (Console Fallback)`);
       console.log(`To: ${to}`);
       console.log(`Reset Link: ${resetLink}`);
@@ -88,9 +112,10 @@ export async function sendPasswordResetEmail(to: string, resetLink: string): Pro
     }
 
     const transporter = getTransporter();
+    const fromEmail = process.env.SMTP_FROM || process.env.GMAIL_EMAIL || 'noreply@hopecard.com';
 
     const mailOptions = {
-      from: process.env.GMAIL_EMAIL,
+      from: fromEmail,
       to: to,
       subject: 'Reset Your HopeCard Admin Password',
       html: `
@@ -117,7 +142,8 @@ export async function sendPasswordResetEmail(to: string, resetLink: string): Pro
 
     const info = await transporter.sendMail(mailOptions);
     
-    console.log(`\n📧 PASSWORD RESET EMAIL SENT via Gmail`);
+    const emailProvider = process.env.SMTP_HOST ? 'SMTP' : 'Gmail';
+    console.log(`\n📧 PASSWORD RESET EMAIL SENT via ${emailProvider}`);
     console.log(`To: ${to}`);
     console.log(`Message ID: ${info.messageId}`);
     console.log(`---\n`);

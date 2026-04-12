@@ -40,15 +40,36 @@ export default function ChangePassword() {
     }
 
     try {
-      const response = await fetch("/api/auth/change-password", {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+      const token = localStorage.getItem("admin_token");
+      
+      // Get user email from JWT token stored in localStorage
+      let userEmail = "";
+      if (token) {
+        try {
+          const decoded = JSON.parse(atob(token.split('.')[1]));
+          userEmail = decoded.email || "";
+        } catch (e) {
+          console.error("Failed to decode token:", e);
+        }
+      }
+
+      if (!userEmail) {
+        setError("Session expired - please log in again");
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch(`${backendUrl}/api/auth/change-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(token && { "Authorization": `Bearer ${token}` }),
         },
         body: JSON.stringify({
+          email: userEmail,
           currentPassword,
           newPassword,
-          confirmPassword,
         }),
       });
 
@@ -72,7 +93,7 @@ export default function ChangePassword() {
         router.push("/dashboard");
       }, 2000);
     } catch (err) {
-      setError("An error occurred");
+      setError("An error occurred - make sure backend is running");
       console.error(err);
       setLoading(false);
     }

@@ -1,37 +1,111 @@
 "use client";
 
-import { useState } from "react"; // Added useState
+import { useState, useEffect } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
 import ReviewDonorModal from "@/components/layout/modals/DigitalDonors/ReviewDonorModal";
 import styles from "../tableStyles.module.css";
 
-const initialDonors = [
-  { 
-    id: 1, 
-    name: "Maria Santos", 
-    email: "maria@email.com", 
-    date: "2026-03-28", 
-    idVerified: false, 
-    bankVerified: false, 
-    status: "Pending",
-    age: 28,
-    gender: "Female",
-    occupation: "Software Engineer",
-    phone: "+63 912 345 6789",
-    address: "123 Hope St, Manila, Philippines",
-    image: "/HopeCard%20Logo.png"
-  },
-  { id: 2, name: "Juan dela Cruz", email: "juan@email.com", date: "2026-03-27", idVerified: false, bankVerified: false, status: "Pending", age: 35, gender: "Male", occupation: "Teacher", phone: "+63 987 654 3210", address: "456 Charity Ln, Quezon City" },
-  { id: 3, name: "Ana Reyes", email: "ana@email.com", date: "2026-03-26", idVerified: false, bankVerified: false, status: "Pending", age: 24, gender: "Female", occupation: "Graphic Designer", phone: "+63 911 222 3333", address: "789 Kindness Blvd, Cebu City" },
-  { id: 4, name: "Pedro Garcia", email: "pedro@email.com", date: "2026-03-25", idVerified: true, bankVerified: true, status: "Approved" },
-  { id: 5, name: "Sofia Martinez", email: "sofia@email.com", date: "2026-03-24", idVerified: false, bankVerified: false, status: "Rejected" },
-];
-
 export default function DigitalDonors() {
-  const [donors, setDonors] = useState(initialDonors);
+  const [donors, setDonors] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedDonor, setSelectedDonor] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
- 
+
+  // Fetch pending approvals from backend
+  useEffect(() => {
+    const fetchPendingApprovals = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const token = localStorage.getItem('admin_token');
+        
+        if (!token) {
+          setError('No authentication token found. Please log in.');
+          setDonors([]);
+          setLoading(false);
+          return;
+        }
+
+        const response = await fetch('/api/approvals/digital-donors?page=1&limit=100', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `Failed to fetch: ${response.status} ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        
+        if (!result.data || !Array.isArray(result.data)) {
+          setDonors([]);
+          setError(null);
+          return;
+        }
+
+        // Map backend data to frontend format
+        const formattedData = result.data.map((d: any) => ({
+          id: d.id,
+          name: `${d.first_name || ''} ${d.last_name || ''}`.trim() || d.full_name || 'N/A',
+          email: d.email,
+          date: d.created_at?.split('T')[0] || '',
+          idVerified: d.id_verified || false,
+          bankVerified: d.bank_verified || false,
+          status: d.verification_status?.charAt(0).toUpperCase() + d.verification_status?.slice(1) || 'Pending',
+          age: d.age,
+          gender: d.gender,
+          occupation: d.occupation,
+          phone: d.phone,
+          address: d.address,
+          image: d.image || "/HopeCard%20Logo.png"
+        }));
+
+        setDonors(formattedData);
+      } catch (error) {
+        console.error('Error fetching pending approvals:', error);
+        setError(error instanceof Error ? error.message : 'Failed to fetch pending approvals');
+        setDonors([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPendingApprovals();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className={styles.pageContainer}>
+        <header className={styles.header}>
+          <h1>Digital Donors</h1>
+          <p>Review and approve digital donor registrations</p>
+        </header>
+        <div className={styles.tableContainer}>
+          <p>Loading pending approvals...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.pageContainer}>
+        <header className={styles.header}>
+          <h1>Digital Donors</h1>
+          <p>Review and approve digital donor registrations</p>
+        </header>
+        <div className={styles.tableContainer}>
+          <div style={{ padding: '20px', color: '#ef4444', backgroundColor: '#fee2e2', borderRadius: '8px' }}>
+            <strong>Error:</strong> {error}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const handleReview = (donor: any) => {
     setSelectedDonor(donor);
     setIsModalOpen(true);

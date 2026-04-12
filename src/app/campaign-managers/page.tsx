@@ -1,21 +1,104 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
 import ReviewManagerModal from "@/components/layout/modals/CampaignManagers/ReviewManagerModal";
 import styles from "../tableStyles.module.css";
 
-const initialManagers = [
-  { id: 1, name: "Hope Community Org", org: "Hope Foundation", email: "contact@hope.org", date: "2026-03-29", docsVerified: false, status: "Pending" },
-  { id: 2, name: "ABC Foundation", org: "ABC Charity", email: "info@abc.org", date: "2026-03-28", docsVerified: false, status: "Pending" },
-  { id: 3, name: "Care Society", org: "Care Org", email: "admin@care.org", date: "2026-03-27", docsVerified: true, status: "Approved" },
-  { id: 4, name: "Help Network", org: "Help Inc", email: "contact@help.org", date: "2026-03-26", docsVerified: false, status: "Rejected" },
-];
-
 export default function CampaignManagers() {
-  const [managers, setManagers] = useState(initialManagers);
+  const [managers, setManagers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedManager, setSelectedManager] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Fetch pending approvals from backend
+  useEffect(() => {
+    const fetchPendingApprovals = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const token = localStorage.getItem('admin_token');
+        
+        if (!token) {
+          setError('No authentication token found. Please log in.');
+          setManagers([]);
+          setLoading(false);
+          return;
+        }
+
+        const response = await fetch('/api/approvals/campaign-managers?page=1&limit=100', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `Failed to fetch: ${response.status} ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        
+        if (!result.data || !Array.isArray(result.data)) {
+          setManagers([]);
+          setError(null);
+          return;
+        }
+
+        // Map backend data to frontend format
+        const formattedData = result.data.map((m: any) => ({
+          id: m.id,
+          name: `${m.first_name || ''} ${m.last_name || ''}`.trim() || m.full_name || 'N/A',
+          org: m.organization || m.company || 'N/A',
+          email: m.email,
+          date: m.created_at?.split('T')[0] || '',
+          docsVerified: m.documents_verified || false,
+          status: m.verification_status?.charAt(0).toUpperCase() + m.verification_status?.slice(1) || 'Pending',
+        }));
+
+        setManagers(formattedData);
+      } catch (error) {
+        console.error('Error fetching pending approvals:', error);
+        setError(error instanceof Error ? error.message : 'Failed to fetch pending approvals');
+        setManagers([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPendingApprovals();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className={styles.pageContainer}>
+        <header className={styles.header}>
+          <h1>Campaign Managers</h1>
+          <p>Review and approve campaign manager applications</p>
+        </header>
+        <div className={styles.tableContainer}>
+          <p>Loading pending approvals...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.pageContainer}>
+        <header className={styles.header}>
+          <h1>Campaign Managers</h1>
+          <p>Review and approve campaign manager applications</p>
+        </header>
+        <div className={styles.tableContainer}>
+          <div style={{ padding: '20px', color: '#ef4444', backgroundColor: '#fee2e2', borderRadius: '8px' }}>
+            <strong>Error:</strong> {error}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleReview = (manager: any) => {
     setSelectedManager(manager);

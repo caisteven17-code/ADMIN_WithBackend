@@ -170,8 +170,14 @@
   transition: background-color 0.2s;
 }
 
-.approveBtn:hover {
+.approveBtn:hover:not(:disabled) {
   background-color: #16a34a;
+}
+
+.approveBtn:disabled {
+  background-color: #86efac;
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .rejectBtn {
@@ -186,8 +192,14 @@
   transition: background-color 0.2s;
 }
 
-.rejectBtn:hover {
+.rejectBtn:hover:not(:disabled) {
   background-color: #8b1a1a;
+}
+
+.rejectBtn:disabled {
+  background-color: #f87171;
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .cancelBtn {
@@ -202,6 +214,12 @@
   transition: background-color 0.2s;
 }
 
-.cancelBtn:hover {
+.cancelBtn:hover:not(:disabled) {
   background-color: #e5e7eb;
+}
+
+.cancelBtn:disabled {
+  background-color: #f0f0f0;
+  cursor: not-allowed;
+  opacity: 0.5;
 }

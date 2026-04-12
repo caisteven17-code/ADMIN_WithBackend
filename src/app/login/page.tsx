@@ -35,18 +35,11 @@ export default function Login() {
         return;
       }
 
-      // Credentials verified, OTP has been sent
+      // OTP ENABLED: Store email and redirect to OTP verification page
+      localStorage.setItem("pending_email", email);
+      
       // Redirect to OTP verification page
-      if (data.requiresOtp && data.email) {
-        // Small delay to ensure state updates
-        setTimeout(() => {
-          router.push(`/verify?email=${encodeURIComponent(data.email)}`);
-        }, 100);
-      } else {
-        // Fallback - shouldn't happen with current flow
-        setError("Unexpected response from server");
-        setLoading(false);
-      }
+      router.push(`/verify?email=${encodeURIComponent(email)}`);
     } catch (err) {
       setError("An error occurred during login");
       console.error(err);
@@ -91,7 +84,7 @@ export default function Login() {
                 <Mail size={18} className={styles.inputIcon} />
                 <input
                   type="email"
-                  placeholder="admin@hopecard.com"
+                  placeholder="your.email@example.com"
                   required
                   className={styles.input}
                   value={email}
@@ -107,7 +100,7 @@ export default function Login() {
                 <Lock size={18} className={styles.inputIcon} />
                 <input
                   type="password"
-                  placeholder="••••••••"
+                  placeholder="Enter your password"
                   required
                   className={styles.input}
                   value={password}
@@ -122,18 +115,9 @@ export default function Login() {
               className={styles.loginBtn}
               disabled={loading}
             >
-              {loading ? "Logging in..." : "Log In"}
+              {loading ? "Sending OTP..." : "Send OTP"}
             </button>
           </form>
-
-          <div className={styles.forgotPassword}>
-            <button
-              type="button"
-              onClick={() => router.push("/forgot-password")}
-            >
-              Forgot Password?
-            </button>
-          </div>
         </div>
       </div>
     </div>

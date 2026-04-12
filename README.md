@@ -17,3 +17,7 @@ npm install
 
 # If you encounter peer dependency issues:
 npm install --legacy-peer-deps
+
+
+username: admin@hopecard.com
+password: admin123

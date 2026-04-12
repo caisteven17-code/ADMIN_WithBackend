@@ -3,8 +3,23 @@ import { verifyJWT } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get JWT token from cookies
-    const token = request.cookies.get('admin_token')?.value;
+    // Get JWT token from Authorization header or cookies
+    const authHeader = request.headers.get('authorization');
+    let token = null;
+
+    if (authHeader?.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    } else {
+      token = request.cookies.get('admin_token')?.value;
+    }
+
+    if (!token) {
+      // Also check localStorage via body for client-side calls
+      const body = await request.json().catch(() => null);
+      if (body?.token) {
+        token = body.token;
+      }
+    }
 
     if (!token) {
       return NextResponse.json(

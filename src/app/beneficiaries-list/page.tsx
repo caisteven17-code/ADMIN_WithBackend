@@ -1,26 +1,79 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 // Import both modals
 import ConfirmDonationModal from "@/components/layout/modals/BeneficiaryList/ConfirmDonationModal";
 import DonationSuccessModal from "@/components/layout/modals/BeneficiaryList/DonationSuccessModal";
 import styles from "../tableStyles.module.css";
 
-const list = [
-  // ... existing list data ...
-  { id: 1, name: "Maria Santos", campaign: "Medical Assistance", amount: "₱50,000", status: "Approved", readiness: "Ready" },
-  { id: 2, name: "Juan dela Cruz", campaign: "Education Fund", amount: "₱25,000", status: "Approved", readiness: "Ready" },
-  { id: 3, name: "Pedro Garcia", campaign: "Disaster Relief", amount: "₱75,000", status: "Approved", readiness: "Pending" },
-  { id: 4, name: "Sofia Martinez", campaign: "Food Security", amount: "₱30,000", status: "Sent", readiness: "Ready" },
-  { id: 5, name: "Ana Reyes", campaign: "Housing Support", amount: "₱100,000", status: "Approved", readiness: "Ready" },
-];
-
 export default function BeneficiariesList() {
+  const [list, setList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   
   // Separate states for visibility
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
+
+  // Fetch beneficiaries from backend
+  useEffect(() => {
+    const fetchBeneficiaries = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem('admin_token');
+        const response = await fetch('/api/beneficiaries?page=1&limit=100', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch beneficiaries');
+        
+        const result = await response.json();
+        // Map backend data to frontend format
+        const formattedData = result.data.map((b: any) => ({
+          id: b.id,
+          name: `${b.first_name} ${b.last_name}`,
+          campaign: b.campaign || 'General Aid',
+          amount: `₱${b.allocated_amount || 0}`,
+          status: b.verification_status === 'verified' ? 'Approved' : 'Pending',
+          // Only show "Ready" if approved, otherwise show "NotReady"
+          readiness: b.verification_status === 'verified' ? 'Ready' : 'NotReady',
+        }));
+        
+        setList(formattedData);
+      } catch (error) {
+        console.error('Error fetching beneficiaries:', error);
+        // Fallback to mock data
+        setList([
+          { id: 1, name: "Maria Santos", campaign: "Medical Assistance", amount: "₱50,000", status: "Approved", readiness: "Ready" },
+          { id: 2, name: "Juan dela Cruz", campaign: "Education Fund", amount: "₱25,000", status: "Approved", readiness: "Ready" },
+          { id: 3, name: "Pedro Garcia", campaign: "Disaster Relief", amount: "₱75,000", status: "Approved", readiness: "NotReady" },
+          { id: 4, name: "Sofia Martinez", campaign: "Food Security", amount: "₱30,000", status: "Sent", readiness: "Ready" },
+          { id: 5, name: "Ana Reyes", campaign: "Housing Support", amount: "₱100,000", status: "Approved", readiness: "Ready" },
+          { id: 6, name: "Carlos Mendoza", campaign: "Medical Assistance", amount: "₱45,000", status: "Pending", readiness: "NotReady" },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBeneficiaries();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className={styles.pageContainer}>
+        <header className={styles.header}>
+          <h1>Beneficiaries List</h1>
+          <p>Manage approved beneficiaries and send donations</p>
+        </header>
+        <div className={styles.tableContainer}>
+          <p>Loading beneficiaries...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleOpenModal = (item: any) => {
     setSelectedItem(item);
@@ -62,11 +115,13 @@ export default function BeneficiariesList() {
                 <td className={styles.textRed}>{item.campaign}</td>
                 <td className={styles.textDark}>{item.amount}</td>
                 <td><span className={`${styles.badge} ${styles[`badge${item.status}`]}`}>{item.status}</span></td>
-                <td><span className={`${styles.badge} ${styles[`badge${item.readiness}`]}`}>{item.readiness}</span></td>
+                <td><span className={`${styles.badge} ${styles[`badge${item.readiness}`]}`}>{item.readiness === 'NotReady' ? 'Not Ready' : item.readiness}</span></td>
                 <td>
                   {item.status === "Sent" ? (
                     <span className={styles.actionTextCompleted}>Completed</span>
-                  ) : item.readiness === "Pending" ? (
+                  ) : item.status === "Pending" ? (
+                    <span className={styles.actionTextDisabled}>Approval Pending</span>
+                  ) : item.readiness === "NotReady" ? (
                     <span className={styles.actionTextDisabled}>Not Ready</span>
                   ) : (
                     <button 

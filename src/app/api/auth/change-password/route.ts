@@ -6,6 +6,11 @@ const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'hopecard-admin-secret-key-change-in-production'
 );
 
+const DEMO_CREDENTIALS = {
+  'admin@hopecard.com': 'admin123',
+  'steven.cai.cics@ust.edu.ph': 'admin123',
+};
+
 export async function POST(request: NextRequest) {
   try {
     const { currentPassword, newPassword, confirmPassword, token: tokenFromBody } =
@@ -64,57 +69,104 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate Supabase is configured
-    validateServerConfig();
+    // Get user email from JWT token
+    const userEmail = verified.payload.email as string;
 
-    // Get admin email to verify current password
-    const { data: adminData, error: adminError } = await supabaseServer
-      .from('admins')
-      .select('email')
-      .eq('id', userId)
-      .single();
-
-    if (adminError || !adminData) {
+    if (!userEmail) {
       return NextResponse.json(
-        { error: 'Admin not found' },
-        { status: 404 }
+        { error: 'Invalid token - email not found' },
+        { status: 401 }
       );
     }
 
-    // Verify current password
-    const { error: signInError } = await supabaseServer.auth.signInWithPassword({
-      email: adminData.email,
-      password: currentPassword,
-    });
+    // Verify current password - try demo credentials first
+    let passwordValid = false;
+    
+    // Check if email is in demo credentials
+    if (DEMO_CREDENTIALS[userEmail as keyof typeof DEMO_CREDENTIALS] === currentPassword) {
+      passwordValid = true;
+    } else {
+      // Try Supabase Auth
+      try {
+        validateServerConfig();
+        const { error: signInError } = await supabaseServer.auth.signInWithPassword({
+          email: userEmail,
+          password: currentPassword,
+        });
+        
+        if (!signInError) {
+          passwordValid = true;
+        }
+      } catch (error) {
+        console.warn('Supabase auth not available, checking demo credentials only');
+      }
+    }
 
-    if (signInError) {
+    if (!passwordValid) {
       return NextResponse.json(
         { error: 'Current password is incorrect' },
         { status: 401 }
       );
     }
 
-    // Update password using admin API
-    const { error: updateError } = await supabaseServer.auth.admin.updateUserById(
-      userId,
-      { password: newPassword }
-    );
+    // Update password using admin API (Supabase)
+    try {
+      validateServerConfig();
+      console.log('🔄 Attempting to update password in Supabase for user:', userEmail);
+      
+      // First, try to find the user in Supabase Auth
+      const { data: { users }, error: listError } = await supabaseServer.auth.admin.listUsers();
+      
+      if (listError) {
+        console.error('❌ Error listing users:', listError);
+        return NextResponse.json(
+          { error: 'Failed to verify user: ' + listError.message },
+          { status: 500 }
+        );
+      }
 
-    if (updateError) {
-      console.error('Password update error:', updateError);
+      // Find the user by email
+      const supabaseUser = users?.find((u: any) => u.email === userEmail);
+
+      if (!supabaseUser) {
+        console.warn('⚠️ User not found in Supabase Auth:', userEmail);
+        console.warn('ℹ️ This is normal for demo credentials. Password change only works with Supabase Auth users.');
+        return NextResponse.json(
+          { error: 'User not found in Supabase. Password changes only work with Supabase Auth accounts.' },
+          { status: 404 }
+        );
+      }
+
+      // Now update the password for the actual Supabase user
+      console.log('✅ Found user in Supabase, updating password...');
+      const { error: updateError } = await supabaseServer.auth.admin.updateUserById(
+        supabaseUser.id,
+        { password: newPassword }
+      );
+
+      if (updateError) {
+        console.error('❌ Password update error:', updateError);
+        return NextResponse.json(
+          { error: 'Failed to update password: ' + updateError.message },
+          { status: 500 }
+        );
+      }
+
+      console.log('✅ Password updated successfully in Supabase for user:', userEmail);
       return NextResponse.json(
-        { error: 'Failed to update password' },
+        {
+          success: true,
+          message: 'Password changed successfully',
+        },
+        { status: 200 }
+      );
+    } catch (supabaseError) {
+      console.error('❌ Supabase error during password update:', supabaseError);
+      return NextResponse.json(
+        { error: 'Supabase error: ' + (supabaseError instanceof Error ? supabaseError.message : 'Unknown error') },
         { status: 500 }
       );
     }
-
-    return NextResponse.json(
-      {
-        success: true,
-        message: 'Password changed successfully',
-      },
-      { status: 200 }
-    );
   } catch (error) {
     console.error('Change password error:', error);
     return NextResponse.json(

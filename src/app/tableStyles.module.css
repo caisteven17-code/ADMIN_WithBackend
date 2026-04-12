@@ -82,6 +82,9 @@
 .badgeReady { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
 .badgeReady::before { background: #3b82f6; }
 
+.badgeNotReady { background: #fecaca; color: #7f1d1d; border: 1px solid #fca5a5; }
+.badgeNotReady::before { background: #ef4444; }
+
 .badgeSent { background: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb; }
 .badgeSent::before { background: #9ca3af; }
 

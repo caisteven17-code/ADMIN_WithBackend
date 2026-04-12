@@ -17,36 +17,10 @@ export default function ForgotPassword() {
     e.preventDefault();
     setError("");
     setSuccess("");
-    setLoading(true);
 
-    try {
-      const response = await fetch("/api/auth/send-otp", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || "Failed to send OTP");
-        setLoading(false);
-        return;
-      }
-
-      setSuccess(`OTP sent to ${data.email}`);
-      
-      // Redirect to verify page after 2 seconds
-      setTimeout(() => {
-        router.push(`/verify?email=${encodeURIComponent(email)}`);
-      }, 2000);
-    } catch (err) {
-      setError("An error occurred");
-      console.error(err);
-      setLoading(false);
-    }
+    // OTP DISABLED - Show message to contact admin
+    setError("OTP authentication is currently disabled. Please contact an administrator to reset your password.");
+    setLoading(false);
   };
 
   return (

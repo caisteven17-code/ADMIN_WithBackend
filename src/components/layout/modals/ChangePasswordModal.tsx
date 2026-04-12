@@ -54,20 +54,36 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
     }
 
     try {
-      // Get token from localStorage
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
       const token = localStorage.getItem('admin_token');
+      
+      // Get user email from JWT token
+      let userEmail = "";
+      if (token) {
+        try {
+          const decoded = JSON.parse(atob(token.split('.')[1]));
+          userEmail = decoded.email || "";
+        } catch (e) {
+          console.error("Failed to decode token:", e);
+        }
+      }
 
-      const response = await fetch("/api/auth/change-password", {
+      if (!userEmail) {
+        setError("Session expired - please log in again");
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch(`${backendUrl}/api/auth/change-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           ...(token && { "Authorization": `Bearer ${token}` }),
         },
         body: JSON.stringify({
+          email: userEmail,
           currentPassword,
           newPassword,
-          confirmPassword,
-          token, // Also send in body as fallback
         }),
       });
 
@@ -77,6 +93,21 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
         setError(data.error || "Failed to change password");
         setLoading(false);
         return;
+      }
+
+      // Verify the new password works by attempting login
+      try {
+        const loginTest = await fetch(`${backendUrl}/api/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: userEmail, password: newPassword }),
+        });
+        
+        if (loginTest.ok) {
+          console.log("✅ New password verified");
+        }
+      } catch (e) {
+        console.warn("Could not verify password");
       }
 
       setSuccess("Password changed successfully!");
