@@ -1,9 +1,8 @@
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from "@nestjs/common";
-import { jwtVerify } from "jose";
+import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { jwtVerify } from 'jose';
+import { SERVICE_PORTS, JWT_SECRET as JWT_SECRET_RAW } from './constants';
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "hopecard-admin-secret-key-change-in-production"
-);
+const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_RAW);
 
 @Injectable()
 export class JwtGuard implements CanActivate {

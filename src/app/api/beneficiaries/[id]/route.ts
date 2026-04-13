@@ -19,6 +19,7 @@ export async function GET(
       );
     }
 
+    const BACKEND_URL = await getBackendUrl();
     const response = await fetch(`${BACKEND_URL}/api/beneficiaries/${id}`, {
       method: 'GET',
       headers: {
@@ -59,6 +60,8 @@ export async function PUT(
 
     const body = await request.json();
 
+    const BACKEND_URL = await getBackendUrl();
+
     const response = await fetch(`${BACKEND_URL}/api/beneficiaries/${id}`, {
       method: 'PUT',
       headers: {
@@ -97,6 +100,8 @@ export async function DELETE(
         { status: 401 }
       );
     }
+
+    const BACKEND_URL = await getBackendUrl();
 
     const response = await fetch(`${BACKEND_URL}/api/beneficiaries/${id}`, {
       method: 'DELETE',

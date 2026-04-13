@@ -1,0 +1,264 @@
+import { Injectable } from '@nestjs/common';
+import { supabase } from '@shared/supabaseClient';
+import { ActivityLogger } from '@shared/activity-logger';
+
+export interface Beneficiary {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  status: string;
+  created_at: string;
+  updated_at?: string;
+  [key: string]: any;
+}
+
+@Injectable()
+export class BeneficiariesService {
+  constructor(private readonly activityService: ActivityLogger) {}
+  async getAllBeneficiaries(
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<{ data: Beneficiary[]; total: number; page: number; limit: number }> {
+    try {
+      const offset = (page - 1) * limit;
+
+      // Get total count from user_profiles table
+      const { count } = await supabase
+        .from('user_profiles')
+        .select('*', { count: 'exact' })
+        .eq('role', 'beneficiary');
+
+      // Get paginated data
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('role', 'beneficiary')
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        console.error('❌ Error fetching beneficiaries:', error);
+        throw new Error(`Failed to fetch beneficiaries: ${error.message}`);
+      }
+
+      console.log(`✅ Retrieved ${data?.length || 0} beneficiaries from ${count || 0} total`);
+      return {
+        data: data || [],
+        total: count || 0,
+        page,
+        limit,
+      };
+    } catch (error) {
+      console.error('❌ Exception in getAllBeneficiaries:', error);
+      throw error;
+    }
+  }
+
+  async getBeneficiaryById(id: string): Promise<Beneficiary> {
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', id)
+        .eq('role', 'beneficiary')
+        .single();
+
+      if (error) {
+        console.error('❌ Error fetching beneficiary:', error);
+        throw new Error(`Failed to fetch beneficiary: ${error.message}`);
+      }
+
+      if (!data) {
+        console.warn(`⚠️ Beneficiary not found: ${id}`);
+        throw new Error('Beneficiary not found');
+      }
+
+      console.log(`✅ Retrieved beneficiary: ${data.first_name} ${data.last_name}`);
+      return data;
+    } catch (error) {
+      console.error('❌ Exception in getBeneficiaryById:', error);
+      throw error;
+    }
+  }
+
+  async getBeneficiariesByStatus(
+    status: string,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<{ data: Beneficiary[]; total: number; page: number; limit: number }> {
+    try {
+      const offset = (page - 1) * limit;
+
+      // Get total count for this status from user_profiles
+      const { count } = await supabase
+        .from('user_profiles')
+        .select('*', { count: 'exact' })
+        .eq('role', 'beneficiary')
+        .eq('status', status);
+
+      // Get paginated data
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('role', 'beneficiary')
+        .eq('status', status)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        console.error('❌ Error fetching beneficiaries by status:', error);
+        throw new Error(`Failed to fetch beneficiaries: ${error.message}`);
+      }
+
+      console.log(`✅ Retrieved ${data?.length || 0} beneficiaries with status '${status}'`);
+      return {
+        data: data || [],
+        total: count || 0,
+        page,
+        limit,
+      };
+    } catch (error) {
+      console.error('❌ Exception in getBeneficiariesByStatus:', error);
+      throw error;
+    }
+  }
+
+  async searchBeneficiaries(
+    query: string,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<{ data: Beneficiary[]; total: number; page: number; limit: number }> {
+    try {
+      const offset = (page - 1) * limit;
+      const searchQuery = `%${query}%`;
+
+      // Count total matching records from user_profiles
+      const { count } = await supabase
+        .from('user_profiles')
+        .select('*', { count: 'exact' })
+        .eq('role', 'beneficiary')
+        .or(`first_name.ilike.${searchQuery},last_name.ilike.${searchQuery},email.ilike.${searchQuery}`);
+
+      // Get paginated data
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('role', 'beneficiary')
+        .or(`first_name.ilike.${searchQuery},last_name.ilike.${searchQuery},email.ilike.${searchQuery}`)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        console.error('❌ Error searching beneficiaries:', error);
+        throw new Error(`Failed to search beneficiaries: ${error.message}`);
+      }
+
+      console.log(`✅ Found ${data?.length || 0} beneficiaries matching '${query}'`);
+      return {
+        data: data || [],
+        total: count || 0,
+        page,
+        limit,
+      };
+    } catch (error) {
+      console.error('❌ Exception in searchBeneficiaries:', error);
+      throw error;
+    }
+  }
+
+  async createBeneficiary(beneficiaryData: Partial<Beneficiary>): Promise<Beneficiary> {
+    try {
+      // Add role: 'beneficiary' when creating
+      const dataWithRole = {
+        ...beneficiaryData,
+        role: 'beneficiary',
+      };
+
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .insert([dataWithRole])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Error creating beneficiary:', error);
+        throw new Error(`Failed to create beneficiary: ${error.message}`);
+      }
+
+      console.log(`✅ Created beneficiary: ${data.first_name} ${data.last_name}`);
+
+      // Log activity when beneficiary applies (status is pending)
+      if (data.verification_status === 'pending' || data.status === 'pending') {
+        try {
+          await this.activityService.logActivity({
+            admin_id: 'system',
+            admin_email: data.email,
+            action: 'APPLIED',
+            description: `New beneficiary application from ${data.first_name} ${data.last_name}`,
+            resource_type: 'beneficiary',
+            resource_id: data.id,
+          });
+        } catch (activityError) {
+          console.warn('Failed to log activity for new beneficiary application:', activityError);
+        }
+      }
+
+      return data;
+    } catch (error) {
+      console.error('❌ Exception in createBeneficiary:', error);
+      throw error;
+    }
+  }
+
+  async updateBeneficiary(
+    id: string,
+    updates: Partial<Beneficiary>,
+  ): Promise<Beneficiary> {
+    try {
+      const { data, error } = await supabase
+        .from('beneficiaries')
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Error updating beneficiary:', error);
+        throw new Error(`Failed to update beneficiary: ${error.message}`);
+      }
+
+      if (!data) {
+        throw new Error('Beneficiary not found');
+      }
+
+      console.log(`✅ Updated beneficiary: ${data.first_name} ${data.last_name}`);
+      return data;
+    } catch (error) {
+      console.error('❌ Exception in updateBeneficiary:', error);
+      throw error;
+    }
+  }
+
+  async deleteBeneficiary(id: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const { error } = await supabase
+        .from('beneficiaries')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('❌ Error deleting beneficiary:', error);
+        throw new Error(`Failed to delete beneficiary: ${error.message}`);
+      }
+
+      console.log(`✅ Deleted beneficiary: ${id}`);
+      return { success: true, message: 'Beneficiary deleted successfully' };
+    } catch (error) {
+      console.error('❌ Exception in deleteBeneficiary:', error);
+      throw error;
+    }
+  }
+}
+

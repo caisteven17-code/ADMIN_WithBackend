@@ -9,7 +9,7 @@
     "target": "ES2021",
     "lib": ["ES2021"],
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "./",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -22,9 +22,10 @@
     "experimentalDecorators": true,
     "baseUrl": "./",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@shared/*": ["shared/*"]
     }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "services/**/*", "shared/**/*"],
   "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
 }

@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const BACKEND_URL = await getBackendUrl();
     // Build backend URL
     let url = `${BACKEND_URL}/api/beneficiaries?page=${page}&limit=${limit}`;
     if (status) url += `&status=${status}`;
@@ -64,6 +65,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const BACKEND_URL = await getBackendUrl();
 
     const response = await fetch(`${BACKEND_URL}/api/beneficiaries`, {
       method: 'POST',
