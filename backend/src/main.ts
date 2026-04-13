@@ -57,7 +57,10 @@ async function bootstrap() {
 
     // Global exception filters
     app.useGlobalFilters(new HttpExceptionFilter());
-    app.useGlobalFilters(new AllExceptionPORT_RANGE_START);
+    app.useGlobalFilters(new AllExceptionsFilter());
+
+    // Find available port starting from PORT_RANGE_START
+    const port = await findAvailablePort(PORT_RANGE_START);
 
     console.log(`\n🚀 Starting HTTP server on port ${port}...`);
     await app.listen(port);
@@ -99,10 +102,6 @@ async function bootstrap() {
 }
 
 bootstrap();
-`   4. Ensure at least one port is available (tried ${PORT_RANGE_START}-${PORT_RANGE_START + 9})\n`);
-    process.exit(1);
-  }
-}
 
 /**
  * Write backend port and URL to public/backend-info.json for frontend discovery
@@ -125,4 +124,6 @@ function writeBackendInfo(port: number): void {
   } catch (error) {
     console.warn(
       `⚠️  Could not write backend info: ${error instanceof Error ? error.message : error}`
-    
+    );
+  }
+}
