@@ -1,5 +1,6 @@
 import "reflect-metadata";
 import path from "path";
+import fs from "fs";
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { AllExceptionsFilter, HttpExceptionFilter } from "./common/http-exception.filter";
@@ -55,6 +56,22 @@ async function bootstrap() {
 
     console.log("\n🚀 Starting HTTP server on port " + port + "...");
     await app.listen(port);
+
+    // Write port info to public folder for frontend discovery
+    const backendInfoPath = path.resolve(__dirname, "../../public/backend-info.json");
+    const backendInfo = {
+      port,
+      url: `http://localhost:${port}`,
+      timestamp: new Date().toISOString(),
+    };
+    
+    try {
+      fs.mkdirSync(path.dirname(backendInfoPath), { recursive: true });
+      fs.writeFileSync(backendInfoPath, JSON.stringify(backendInfo, null, 2));
+      console.log(`📝 Backend info written to: ${backendInfoPath}`);
+    } catch (err) {
+      console.warn(`⚠️  Could not write backend info: ${err}`);
+    }
 
     console.log("\n✅ Backend Server Running!");
     console.log(`   URL: http://localhost:${port}`);
