@@ -1,64 +1,92 @@
+interface BackendInfo {
+  port: number;
+  url: string;
+  timestamp: string;
+}
+
+const BACKEND_CONFIG_FILE = "/backend-info.json";
+const HEALTH_CHECK_ENDPOINT = "/api/health";
+const PORT_RANGE_START = 5000;
+const PORT_RANGE_END = 5009;
+const HEALTH_CHECK_TIMEOUT = 1000; // 1 second
+const DEBUG = typeof window !== "undefined" && process.env.NODE_ENV === "development";
+
 /**
- * Dynamically discover backend URL
- * 1. Try to read backend-info.json (written by backend on startup)
- * 2. Try port probing (5000-5009)
+ * Client-side backend URL discovery with fallback strategies:
+ * 1. Read backend-info.json (written by backend on startup)
+ * 2. Probe ports 5000-5009 for health endpoint
  * 3. Fall back to environment variable
- * 4. Fall back to localhost:5000
+ * 4. Use default localhost:5000
  */
 export async function getBackendUrl(): Promise<string> {
-  // Try to fetch backend info file created by backend
+  // Strategy 1: Try to fetch backend info file
   try {
-    const response = await fetch("/backend-info.json", { cache: "no-store" });
+    const response = await fetch(BACKEND_CONFIG_FILE, { cache: "no-store" });
     if (response.ok) {
-      const config = await response.json();
+      const config: BackendInfo = await response.json();
       const url = config.url;
-      console.log(`🔍 Backend discovered at ${url} from config file`);
+      
+      if (DEBUG) {
+        console.log(`[Backend Discovery] Found via config file: ${url}`);
+      }
       return url;
     }
   } catch (error) {
-    console.log(`ℹ️  backend-info.json not found, trying port probing...`);
+    if (DEBUG) {
+      console.log(`[Backend Discovery] Config file unavailable, trying port probing...`);
+    }
   }
 
-  // Try to probe for available backend (ports 5000-5009)
+  // Strategy 2: Port probing
   try {
     const port = await probeBackendPort();
-    if (port) {
+    if (port !== null) {
       const url = `http://localhost:${port}`;
-      console.log(`🔍 Backend discovered on port ${port} via probing`);
+      if (DEBUG) {
+        console.log(`[Backend Discovery] Found via port probing: ${url}`);
+      }
       return url;
     }
   } catch (error) {
-    console.log(`ℹ️  Port probing failed, using fallback...`);
+    if (DEBUG) {
+      console.warn(`[Backend Discovery] Port probing failed, trying fallback...`);
+    }
   }
 
-  // Fall back to environment variable
+  // Strategy 3: Environment variable
   const envUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
   if (envUrl) {
-    console.log(`🔍 Using backend URL from environment: ${envUrl}`);
+    if (DEBUG) {
+      console.log(`[Backend Discovery] Using env variable: ${envUrl}`);
+    }
     return envUrl;
   }
 
-  // Final fallback
-  const defaultUrl = "http://localhost:5000";
-  console.log(`🔍 Using default backend URL: ${defaultUrl}`);
+  // Strategy 4: Default fallback
+  const defaultUrl = `http://localhost:${PORT_RANGE_START}`;
+  if (DEBUG) {
+    console.log(`[Backend Discovery] Using default: ${defaultUrl}`);
+  }
   return defaultUrl;
 }
 
 /**
- * Probe available ports to find the backend (5000-5009)
+ * Probe available ports to find the backend
+ * Returns the first port that responds successfully to health check
  */
 async function probeBackendPort(): Promise<number | null> {
-  for (let port = 5000; port <= 5009; port++) {
+  for (let port = PORT_RANGE_START; port <= PORT_RANGE_END; port++) {
     try {
-      const response = await fetch(`http://localhost:${port}/api/health`, {
+      const response = await fetch(`http://localhost:${port}${HEALTH_CHECK_ENDPOINT}`, {
         method: "GET",
-        signal: AbortSignal.timeout(1000), // 1 second timeout
+        signal: AbortSignal.timeout(HEALTH_CHECK_TIMEOUT),
       });
+      
       if (response.ok) {
         return port;
       }
-    } catch (err) {
-      // Port not available, try next
+    } catch {
+      // Port not available, continue to next
       continue;
     }
   }
@@ -70,6 +98,9 @@ async function probeBackendPort(): Promise<number | null> {
  */
 let cachedBackendUrl: string | null = null;
 
+/**
+ * Get backend URL with caching
+ */
 export async function getBackendUrlCached(): Promise<string> {
   if (cachedBackendUrl) {
     return cachedBackendUrl;
@@ -79,7 +110,7 @@ export async function getBackendUrlCached(): Promise<string> {
 }
 
 /**
- * Clear the cache (useful for testing)
+ * Clear the cache (useful for testing or manual refresh)
  */
 export function clearBackendUrlCache(): void {
   cachedBackendUrl = null;
