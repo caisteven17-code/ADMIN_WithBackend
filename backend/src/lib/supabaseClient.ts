@@ -13,11 +13,11 @@ console.log('  Service Role Key:', supabaseServiceKey ? '✓ Set (length: ' + su
 console.log('  Anon Key:', supabaseAnonKey ? '✓ Set (length: ' + supabaseAnonKey.length + ')' : '✗ Missing');
 
 if (!supabaseUrl) {
-  throw new Error("Missing SUPABASE_URL in environment variables");
+  throw new Error("Missing SUPABASE_URL in environment variables - check backend/.env");
 }
 
 if (!supabaseServiceKey && !supabaseAnonKey) {
-  throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY in environment variables");
+  throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY in environment variables - check backend/.env");
 }
 
 // Use service role key for backend operations (bypasses RLS), fall back to anon key
@@ -26,3 +26,4 @@ console.log('  Using key type:', supabaseServiceKey ? 'Service Role' : 'Anon');
 
 export const supabase = createClient(supabaseUrl, key);
 export const supabaseServer = supabase;
+console.log('✅ Supabase client initialized successfully');

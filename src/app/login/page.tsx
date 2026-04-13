@@ -28,14 +28,31 @@ export default function Login() {
       });
 
       const data = await response.json();
+      
+      console.log("🔍 Login response status:", response.status);
+      console.log("🔍 Login response ok:", response.ok);
+      console.log("🔍 Login response data:", data);
 
-      if (!response.ok) {
-        setError(data.error || "Login failed");
+      // IMPORTANT: Check status code first
+      if (response.status !== 200) {
+        const errorMessage = data.error || data.message || `Login failed (${response.status})`;
+        console.log("❌ Login error (non-200):", errorMessage);
+        setError(errorMessage);
+        setLoading(false);
+        return;
+      }
+
+      // Then check success flag
+      if (!data.success) {
+        const errorMessage = data.error || data.message || "Login failed";
+        console.log("❌ Login error (success=false):", errorMessage);
+        setError(errorMessage);
         setLoading(false);
         return;
       }
 
       // OTP ENABLED: Store email and redirect to OTP verification page
+      console.log("✅ Login successful, redirecting to OTP");
       localStorage.setItem("pending_email", email);
       
       // Redirect to OTP verification page

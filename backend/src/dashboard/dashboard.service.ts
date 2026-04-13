@@ -59,12 +59,28 @@ export class DashboardService {
    */
   private async getTotalDonationsSent(): Promise<string> {
     try {
+      // Try with explicit count first to debug
+      const { count, error: countError } = await supabase
+        .from("hopecard_purchases")
+        .select("*", { count: "exact", head: true });
+
+      console.log("📊 Total records check - Count:", count, "Error:", countError?.message);
+
       const { data, error } = await supabase
         .from("hopecard_purchases")
         .select("amount_paid");
 
       if (error) {
-        console.error("Supabase error fetching total donations:", error);
+        console.error("❌ Supabase error fetching total donations:", error);
+        console.error("Error details:", error.message, error.code);
+        return "₱0";
+      }
+
+      console.log("✅ Fetched hopecard_purchases records:", data?.length || 0);
+      console.log("📊 Raw data sample:", data?.[0]);
+
+      if (!data || data.length === 0) {
+        console.warn("⚠️  No data returned from hopecard_purchases table");
         return "₱0";
       }
 
@@ -73,9 +89,12 @@ export class DashboardService {
         return sum + amount;
       }, 0) || 0;
 
-      return this.formatCurrency(total);
+      console.log("💰 Calculated total:", total);
+      const formatted = this.formatCurrency(total);
+      console.log("📝 Formatted result:", formatted);
+      return formatted;
     } catch (error) {
-      console.error("Error fetching total donations:", error);
+      console.error("❌ Error fetching total donations:", error);
       return "₱0";
     }
   }

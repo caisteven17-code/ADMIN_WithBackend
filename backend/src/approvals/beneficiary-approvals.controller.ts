@@ -84,4 +84,30 @@ export class BeneficiaryApprovalsController {
       data: history,
     };
   }
+
+  /**
+   * POST /api/approvals/beneficiaries/:id/donate
+   * Send/process a donation to a beneficiary
+   */
+  @Post(':id/donate')
+  @Protected()
+  async sendDonation(
+    @Param('id') beneficiaryId: string,
+    @Body() body: { adminId: string; amount: number; campaign?: string; notes?: string },
+    @Req() req: any,
+  ) {
+    // Get admin email from JWT token context
+    const adminEmail = req.user?.email || 'admin@hopecard.com';
+    const result = await this.approvalsService.sendDonation(
+      beneficiaryId,
+      body.adminId,
+      {
+        amount: body.amount,
+        campaign: body.campaign,
+        notes: body.notes,
+      },
+      adminEmail,
+    );
+    return result;
+  }
 }

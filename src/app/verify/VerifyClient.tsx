@@ -78,8 +78,9 @@ export default function VerifyClient() {
 
       const data = await response.json();
 
-      if (!response.ok) {
-        setError(data.error || "Failed to verify OTP");
+      if (!response.ok || !data.success) {
+        const errorMessage = data.error || data.message || "Failed to verify OTP";
+        setError(errorMessage);
         setLoading(false);
         return;
       }
@@ -127,8 +128,9 @@ export default function VerifyClient() {
 
       const data = await response.json();
 
-      if (!response.ok) {
-        setError(data.error || "Failed to resend OTP");
+      if (!response.ok || !data.success) {
+        const errorMessage = data.error || data.message || "Failed to resend OTP";
+        setError(errorMessage);
         setResendLoading(false);
         return;
       }

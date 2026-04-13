@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Request } from "@nestjs/common";
+import { Controller, Post, Body, Get, Request, HttpException, HttpStatus } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { Protected } from "./protected.decorator";
 import { supabase } from "../lib/supabaseClient";
@@ -10,7 +10,19 @@ export class AuthController {
   @Post("login")
   async login(@Body() body: { email: string; password: string }) {
     // OTP ENABLED - Require OTP verification
+    console.log(`[CONTROLLER] Login endpoint called for: ${body.email}`);
     const result = await this.authService.login(body.email, body.password);
+    
+    console.log(`[CONTROLLER] Login result:`, result);
+    
+    // Return proper HTTP status code for failed authentication
+    if (!result.success) {
+      const errorMsg = (result as any).error || "Authentication failed";
+      console.log(`[CONTROLLER] ❌ Throwing 401 error: ${errorMsg}`);
+      throw new HttpException(errorMsg, HttpStatus.UNAUTHORIZED);
+    }
+    
+    console.log(`[CONTROLLER] ✅ Returning success result`);
     return result;
   }
 
@@ -18,6 +30,13 @@ export class AuthController {
   async verifyOTP(@Body() body: { email: string; otp: string }) {
     // OTP ENABLED - Verify the OTP and return JWT token
     const result = await this.authService.verifyOTP(body.email, body.otp);
+    
+    // Return proper HTTP status code for failed OTP verification
+    if (!result.success) {
+      const errorMsg = (result as any).error || "OTP verification failed";
+      throw new HttpException(errorMsg, HttpStatus.UNAUTHORIZED);
+    }
+    
     return result;
   }
 
@@ -39,6 +58,12 @@ export class AuthController {
       body.currentPassword,
       body.newPassword
     );
+    
+    if (!result.success) {
+      const errorMsg = (result as any).error || "Password change failed";
+      throw new HttpException(errorMsg, HttpStatus.BAD_REQUEST);
+    }
+    
     return result;
   }
 
@@ -52,20 +77,14 @@ export class AuthController {
 
     if (authError) {
       console.log(`[SEND-OTP] ❌ Error checking auth users: ${authError.message}`);
-      return {
-        success: false,
-        error: "Failed to verify user",
-      };
+      throw new HttpException("Failed to verify user", HttpStatus.BAD_REQUEST);
     }
 
     const user = authUsers.users.find(u => u.email === body.email);
 
     if (!user) {
       console.log(`[SEND-OTP] ❌ User not found in auth for ${body.email}`);
-      return {
-        success: false,
-        error: "User not found",
-      };
+      throw new HttpException("User not found", HttpStatus.NOT_FOUND);
     }
 
     console.log(`[SEND-OTP] ✅ User found: ${user.email}`);
@@ -116,10 +135,7 @@ export class AuthController {
 
     if (otpError) {
       console.error(`[SEND-OTP] ❌ OTP storage error:`, otpError);
-      return {
-        success: false,
-        error: "Failed to generate OTP",
-      };
+      throw new HttpException("Failed to generate OTP", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     console.log(`[SEND-OTP] ✅ OTP stored in database`);
@@ -131,10 +147,7 @@ export class AuthController {
 
     if (!emailSent) {
       console.error(`[SEND-OTP] ❌ Failed to send OTP email`);
-      return {
-        success: false,
-        error: "Failed to send OTP email",
-      };
+      throw new HttpException("Failed to send OTP email", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     console.log(`[SEND-OTP] ✅✅ OTP sent successfully`);

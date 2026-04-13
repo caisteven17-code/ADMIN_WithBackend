@@ -91,3 +91,27 @@
 .confirmBtn:hover {
   opacity: 0.9;
 }
+
+.confirmBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cancelBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.errorBox {
+  background-color: #fee2e2;
+  border: 1px solid #fca5a5;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.errorText {
+  color: #991b1b;
+  font-size: 0.9rem;
+  margin: 0;
+}

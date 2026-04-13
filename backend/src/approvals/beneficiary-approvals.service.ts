@@ -202,4 +202,76 @@ export class BeneficiaryApprovalsService {
       return { status: 'unknown' };
     }
   }
+
+  /**
+   * Send/process a donation to a beneficiary
+   */
+  async sendDonation(
+    beneficiaryId: string,
+    adminId: string,
+    donationData: {
+      amount: number;
+      campaign?: string;
+      notes?: string;
+    },
+    adminEmail?: string,
+  ): Promise<{ success: boolean; message: string; data?: any }> {
+    try {
+      // Get beneficiary details for logging
+      const { data: beneficiaryData } = await supabase
+        .from('user_profiles')
+        .select('first_name, last_name, email, allocated_amount')
+        .eq('id', beneficiaryId)
+        .single();
+
+      if (!beneficiaryData) {
+        return { success: false, message: 'Beneficiary not found' };
+      }
+
+      // Insert donation record into hopecard_purchases table
+      const { data, error } = await supabase
+        .from('hopecard_purchases')
+        .insert([
+          {
+            beneficiary_id: beneficiaryId,
+            amount_paid: donationData.amount,
+            campaign: donationData.campaign || 'General Aid',
+            notes: donationData.notes || '',
+            processed_by: adminId,
+            processed_at: new Date().toISOString(),
+            status: 'completed',
+          },
+        ])
+        .select();
+
+      if (error) {
+        console.error('Supabase error creating donation record:', error);
+        return { success: false, message: 'Failed to record donation' };
+      }
+
+      // Log activity
+      try {
+        await this.activityService.logActivity({
+          admin_id: adminId,
+          admin_email: adminEmail || 'admin@hopecard.com',
+          action: 'DONATION_SENT',
+          description: `Sent donation of ₱${donationData.amount} to ${beneficiaryData.first_name} ${beneficiaryData.last_name}`,
+          resource_type: 'donation',
+          resource_id: beneficiaryId,
+        });
+      } catch (activityError) {
+        console.warn('Failed to log activity, but donation was recorded:', activityError);
+      }
+
+      console.log('✅ Donation recorded for beneficiary:', beneficiaryId);
+      return {
+        success: true,
+        message: 'Donation sent successfully',
+        data: data?.[0],
+      };
+    } catch (error) {
+      console.error('Error sending donation:', error);
+      return { success: false, message: 'Error processing donation' };
+    }
+  }
 }

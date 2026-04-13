@@ -10,16 +10,14 @@ $frontendPath = $scriptPath
 
 # Check if .env files exist
 if (!(Test-Path (Join-Path $backendPath ".env"))) {
-    Write-Host "❌ Backend .env file not found!" -ForegroundColor Red
-    Write-Host "   Please copy .env.example to .env and fill in your values" -ForegroundColor Yellow
-    Write-Host "   Location: $backendPath\.env" -ForegroundColor Yellow
+    Write-Host "Backend .env file not found!" -ForegroundColor Red
+    Write-Host "Please copy .env.example to .env and fill in your values" -ForegroundColor Yellow
     exit 1
 }
 
 if (!(Test-Path (Join-Path $frontendPath ".env.local"))) {
-    Write-Host "❌ Frontend .env.local file not found!" -ForegroundColor Red
-    Write-Host "   Please copy .env.example to .env.local and fill in your values" -ForegroundColor Yellow
-    Write-Host "   Location: $frontendPath\.env.local" -ForegroundColor Yellow
+    Write-Host "Frontend .env.local file not found!" -ForegroundColor Red
+    Write-Host "Please copy .env.example to .env.local and fill in your values" -ForegroundColor Yellow
     exit 1
 }
 
@@ -35,9 +33,7 @@ Write-Host "Starting Frontend (port 3000)..." -ForegroundColor Cyan
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$frontendPath'; npm run dev"
 
 Write-Host ""
-Write-Host "✅ Both servers starting!" -ForegroundColor Green
+Write-Host "Both servers starting!" -ForegroundColor Green
 Write-Host "Frontend: http://localhost:3000" -ForegroundColor Yellow
 Write-Host "Backend: http://localhost:5000" -ForegroundColor Yellow
-Write-Host ""
-Write-Host "📧 Make sure Gmail credentials are configured in backend/.env" -ForegroundColor Cyan
 Write-Host ""

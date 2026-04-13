@@ -44,6 +44,31 @@ export default function Dashboard() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isBackendReady, setIsBackendReady] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+
+  // Retry logic with exponential backoff
+  const retryFetch = async (
+    fn: () => Promise<Response>,
+    maxRetries: number = 3,
+    initialDelay: number = 1000
+  ): Promise<Response> => {
+    let lastError: Error | null = null;
+    
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        return await fn();
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        if (attempt < maxRetries - 1) {
+          const delay = initialDelay * Math.pow(2, attempt); // Exponential backoff
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    }
+    
+    throw lastError || new Error("All retry attempts failed");
+  };
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -54,90 +79,70 @@ export default function Dashboard() {
         
         // Dynamically discover backend URL
         const backendUrl = await getBackendUrlCached();
-        
-        // Get JWT token from localStorage
         const token = localStorage.getItem('admin_token');
         
-        console.log("🔍 Fetching from:", `${backendUrl}/api/dashboard/metrics`);
-        console.log("🔐 Using token:", token ? "✓ Present" : "✗ Missing");
-        
-        // First, check if backend is reachable via health endpoint
-        try {
-          console.log("🏥 Checking backend health...");
-          const healthResponse = await fetch(`${backendUrl}/api/health`, {
+        // Check backend health with retry logic
+        await retryFetch(async () => {
+          const response = await fetch(`${backendUrl}/api/health`, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
           });
           
-          if (!healthResponse.ok) {
-            throw new Error(`Health check failed: ${healthResponse.status}`);
+          if (!response.ok) {
+            throw new Error(`Health check failed: ${response.status}`);
           }
-          const healthData = await healthResponse.json();
-          console.log("✅ Backend is healthy:", healthData);
-        } catch (healthErr) {
-          const healthErrMsg = healthErr instanceof Error ? healthErr.message : String(healthErr);
-          console.warn("⚠️  Backend health check failed:", healthErrMsg);
-          throw new Error(`Backend not responding - ${healthErrMsg}`);
-        }
+          
+          return response;
+        }, 3, 500);
+        
+        setIsBackendReady(true);
         
         const controller = new AbortController();
-        // Increase timeout to 30 seconds for first load
-        timeoutId = setTimeout(() => {
-          console.warn("⏱️  Dashboard request timeout - aborting");
-          controller.abort();
-        }, 30000);
+        timeoutId = setTimeout(() => controller.abort(), 10000);
         
-        const response = await fetch(`${backendUrl}/api/dashboard/metrics`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token && { 'Authorization': `Bearer ${token}` }),
-          },
-          signal: controller.signal,
-        });
+        // Fetch dashboard metrics with retry
+        const response = await retryFetch(async () => {
+          return fetch(`${backendUrl}/api/dashboard/metrics`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token && { 'Authorization': `Bearer ${token}` }),
+            },
+            signal: controller.signal,
+          });
+        }, 2, 800);
         
         if (timeoutId) clearTimeout(timeoutId);
-        console.log("📊 Response status:", response.status, response.statusText);
         
         if (!response.ok) {
-          try {
-            const errorData = await response.json();
-            console.error("📋 Backend error response:", errorData);
-            throw new Error(`Backend error (${response.status}): ${errorData.message || response.statusText}`);
-          } catch (parseErr) {
-            throw new Error(`Backend returned ${response.status}: ${response.statusText}`);
-          }
+          throw new Error(`Backend error (${response.status}): ${response.statusText}`);
         }
         
         const response_data = await response.json();
-        console.log("📊 Response data:", response_data);
-        
         const data = response_data.data || response_data;
+        
         setDashboardStats([
           { id: 1, title: "Total Beneficiaries", value: data.totalBeneficiaries, icon: "Users" },
           { id: 2, title: "Pending Approvals", value: data.pendingApprovals, icon: "CheckCircle" },
           { id: 3, title: "Total Donations Sent", value: data.totalDonationsSent, icon: "DollarSign" },
           { id: 4, title: "Active Campaigns", value: data.activeCampaigns, icon: "Target" },
         ]);
+        setRetryCount(0);
       } catch (err) {
         if (timeoutId) clearTimeout(timeoutId);
         
         const errorMsg = err instanceof Error ? err.message : String(err);
-        console.error("❌ Error fetching dashboard metrics:", errorMsg);
         
-        // Use mock data as fallback
-        console.log("📋 Using mock data as fallback...");
+        // Use fallback data silently on error in production
         setDashboardStats([
-          { id: 1, title: "Total Beneficiaries", value: 245, icon: "Users" },
-          { id: 2, title: "Pending Approvals", value: 12, icon: "CheckCircle" },
-          { id: 3, title: "Total Donations Sent", value: "₱125,450.00", icon: "DollarSign" },
-          { id: 4, title: "Active Campaigns", value: 8, icon: "Target" },
+          { id: 1, title: "Total Beneficiaries", value: "-", icon: "Users" },
+          { id: 2, title: "Pending Approvals", value: "-", icon: "CheckCircle" },
+          { id: 3, title: "Total Donations Sent", value: "-", icon: "DollarSign" },
+          { id: 4, title: "Active Campaigns", value: "-", icon: "Target" },
         ]);
         
-        // Show error in development mode, hide in production
         if (process.env.NODE_ENV === "development") {
-          console.log("🔧 Development mode - showing error for debugging");
-          setError(`Backend Error: ${errorMsg}`);
+          setError(`⚠️ Backend unavailable. Check if backend is running on port 5000.`);
         } else {
           setError(null);
         }

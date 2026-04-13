@@ -32,10 +32,16 @@ export async function POST(request: NextRequest) {
 
     const backendData = await backendResponse.json();
 
+    console.log('📊 Backend response status:', backendResponse.status);
+    console.log('📊 Backend response data:', backendData);
+
     if (!backendResponse.ok) {
-      console.log('❌ Backend login failed:', backendData.error);
+      console.log('❌ Backend login failed with status', backendResponse.status);
+      // Extract error message from NestJS exception or custom response
+      const errorMessage = backendData.error || backendData.message || 'Login failed';
+      console.log('❌ Error message:', errorMessage);
       return NextResponse.json(
-        { error: backendData.error || 'Login failed' },
+        { success: false, error: errorMessage },
         { status: backendResponse.status }
       );
     }

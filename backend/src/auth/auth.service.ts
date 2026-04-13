@@ -31,10 +31,12 @@ export class AuthService {
 
       if (error || !data.user) {
         console.log(`[AUTH] ❌ Authentication failed: ${error?.message}`);
-        return {
+        const result = {
           success: false,
           error: "Invalid email or password",
         };
+        console.log(`[AUTH] Returning error result:`, result);
+        return result;
       }
 
       console.log(`[AUTH] ✅ Credentials verified for: ${email}`);
