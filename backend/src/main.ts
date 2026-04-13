@@ -3,6 +3,7 @@ import path from "path";
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { AllExceptionsFilter, HttpExceptionFilter } from "./common/http-exception.filter";
+import { findAvailablePort } from "./common/port-finder";
 import dotenv from "dotenv";
 
 // Load environment from backend .env file
@@ -50,7 +51,7 @@ async function bootstrap() {
     app.useGlobalFilters(new HttpExceptionFilter());
     app.useGlobalFilters(new AllExceptionsFilter());
 
-    const port = 5000;
+    const port = await findAvailablePort(5000);
 
     console.log("\n🚀 Starting HTTP server on port " + port + "...");
     await app.listen(port);
@@ -78,7 +79,7 @@ async function bootstrap() {
     console.error("   1. Check backend/.env exists and has required variables");
     console.error("   2. Ensure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set");
     console.error("   3. Run: npm install (to install dependencies)");
-    console.error("   4. Check if port 5000 is already in use - try: lsof -i :5000\n");
+    console.error("   4. Ensure at least one port is available (tried 5000-5009)\n");
     process.exit(1);
   }
 }
