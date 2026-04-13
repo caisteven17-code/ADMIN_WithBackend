@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getBackendUrlServer } from '@/lib/backend-discovery-server';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+async function getBackendUrl() {
+  return await getBackendUrlServer();
+}
 
 export async function POST(
   request: NextRequest,
@@ -18,6 +21,7 @@ export async function POST(
     }
 
     const body = await request.json();
+    const BACKEND_URL = await getBackendUrl();
     const url = `${BACKEND_URL}/api/approvals/campaign-managers/${id}/${action}`;
 
     const response = await fetch(url, {

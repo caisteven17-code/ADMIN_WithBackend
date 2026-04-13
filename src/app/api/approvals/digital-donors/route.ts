@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getBackendUrlServer } from '@/lib/backend-discovery-server';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+async function getBackendUrl() {
+  return await getBackendUrlServer();
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,6 +19,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const BACKEND_URL = await getBackendUrl();
     const url = `${BACKEND_URL}/api/approvals/digital-donors/pending?page=${page}&limit=${limit}`;
     console.log(`📡 Fetching digital donors: ${url}`);
 

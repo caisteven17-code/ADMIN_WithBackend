@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createJWT } from '@/lib/auth';
+import { getBackendUrlServer } from '@/lib/backend-discovery-server';
 
 // Hardcoded to ensure they work
 const SUPABASE_URL = 'https://hycsbfugiboutvgbvueg.supabase.co';
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Call backend API to handle login and trigger OTP
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+    const backendUrl = await getBackendUrlServer();
     const backendResponse = await fetch(`${backendUrl}/api/auth/login`, {
       method: 'POST',
       headers: {
