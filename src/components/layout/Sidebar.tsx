@@ -12,7 +12,7 @@ const navItems = [
   { name: "Digital Donors", href: "/digital-donors", icon: User },
   { name: "Campaign Managers", href: "/campaign-managers", icon: Users },
   { name: "Beneficiaries Approval", href: "/beneficiaries-approval", icon: UserCheck },
-  { name: "Beneficiaries List", href: "/beneficiaries-list", icon: Heart },
+  { name: "Campaign List", href: "/beneficiaries-list", icon: Heart },
 ];
 
 export default function Sidebar() {

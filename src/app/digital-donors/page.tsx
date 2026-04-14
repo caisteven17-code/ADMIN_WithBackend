@@ -53,7 +53,6 @@ export default function DigitalDonors() {
           email: d.email,
           date: d.created_at?.split('T')[0] || '',
           idVerified: d.id_verified || false,
-          bankVerified: d.bank_verified || false,
           status: d.verification_status?.charAt(0).toUpperCase() + d.verification_status?.slice(1) || 'Pending',
           age: d.age,
           gender: d.gender,
@@ -130,7 +129,6 @@ export default function DigitalDonors() {
               <th>Email</th>
               <th>Date Submitted</th>
               <th>Identity Verified</th>
-              <th>Bank Statement</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -142,7 +140,6 @@ export default function DigitalDonors() {
                 <td className={styles.textRed}>{donor.email}</td>
                 <td>{donor.date}</td>
                 <td>{donor.idVerified ? <CheckCircle2 color="#22c55e" size={20} /> : <XCircle color="#ef4444" size={20} />}</td>
-                <td>{donor.bankVerified ? <CheckCircle2 color="#22c55e" size={20} /> : <XCircle color="#ef4444" size={20} />}</td>
                 <td><span className={`${styles.badge} ${styles[`badge${donor.status}`]}`}>{donor.status}</span></td>
                 <td>
                   {donor.status === "Pending" && (

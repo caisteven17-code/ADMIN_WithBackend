@@ -14,18 +14,17 @@ interface ReviewDonorModalProps {
 
 export default function ReviewDonorModal({ isOpen, onClose, donorData, onUpdate }: ReviewDonorModalProps) {
   const [idVerified, setIdVerified] = useState(false);
-  const [bankVerified, setBankVerified] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectForm, setShowRejectForm] = useState(false);
 
   if (!donorData) return null;
 
   const handleApprove = () => {
-    if (!idVerified || !bankVerified) {
-      alert("Please verify both Identity Document and Bank Statement before approving");
+    if (!idVerified) {
+      alert("Please verify Identity Document before approving");
       return;
     }
-    const updatedDonor = { ...donorData, idVerified, bankVerified, status: "Approved" };
+    const updatedDonor = { ...donorData, idVerified, status: "Approved" };
     if (onUpdate) onUpdate(updatedDonor);
     alert(`Approved: ${donorData.name}`);
     onClose();
@@ -36,7 +35,7 @@ export default function ReviewDonorModal({ isOpen, onClose, donorData, onUpdate 
       alert("Please provide a rejection reason");
       return;
     }
-    const updatedDonor = { ...donorData, idVerified, bankVerified, status: "Rejected" };
+    const updatedDonor = { ...donorData, idVerified, status: "Rejected" };
     if (onUpdate) onUpdate(updatedDonor);
     alert(`Rejected: ${donorData.name}\nReason: ${rejectionReason}`);
     onClose();
@@ -69,27 +68,6 @@ export default function ReviewDonorModal({ isOpen, onClose, donorData, onUpdate 
               <span>I have verified this identity document is valid</span>
               <div className={styles.statusIcon}>
                 {idVerified ? <CheckCircle2 size={18} color="#22c55e" /> : <XCircle size={18} color="#ef4444" />}
-              </div>
-            </label>
-          </div>
-
-          <div className={styles.field}>
-            <label className={styles.label}>Bank Statement</label>
-            <div className={styles.documentPreview}>
-              <div className={styles.previewBox}>
-                <FileText size={32} />
-                <span>Bank Statement Preview</span>
-              </div>
-            </div>
-            <label className={styles.checkbox}>
-              <input 
-                type="checkbox" 
-                checked={bankVerified}
-                onChange={(e) => setBankVerified(e.target.checked)}
-              />
-              <span>I have verified this bank statement is valid</span>
-              <div className={styles.statusIcon}>
-                {bankVerified ? <CheckCircle2 size={18} color="#22c55e" /> : <XCircle size={18} color="#ef4444" />}
               </div>
             </label>
           </div>

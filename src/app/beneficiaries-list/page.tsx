@@ -33,12 +33,11 @@ export default function BeneficiariesList() {
         // Map backend data to frontend format
         const formattedData = result.data.map((b: any) => ({
           id: b.id,
-          name: `${b.first_name} ${b.last_name}`,
+          campaignManager: b.campaign_manager_name || 'N/A',
           campaign: b.campaign || 'General Aid',
+          name: `${b.first_name} ${b.last_name}`,
           amount: `₱${b.allocated_amount || 0}`,
           status: b.verification_status === 'verified' ? 'Approved' : 'Pending',
-          // Only show "Ready" if approved, otherwise show "NotReady"
-          readiness: b.verification_status === 'verified' ? 'Ready' : 'NotReady',
         }));
         
         setList(formattedData);
@@ -46,12 +45,12 @@ export default function BeneficiariesList() {
         console.error('Error fetching beneficiaries:', error);
         // Fallback to mock data
         setList([
-          { id: 1, name: "Maria Santos", campaign: "Medical Assistance", amount: "₱50,000", status: "Approved", readiness: "Ready" },
-          { id: 2, name: "Juan dela Cruz", campaign: "Education Fund", amount: "₱25,000", status: "Approved", readiness: "Ready" },
-          { id: 3, name: "Pedro Garcia", campaign: "Disaster Relief", amount: "₱75,000", status: "Approved", readiness: "NotReady" },
-          { id: 4, name: "Sofia Martinez", campaign: "Food Security", amount: "₱30,000", status: "Sent", readiness: "Ready" },
-          { id: 5, name: "Ana Reyes", campaign: "Housing Support", amount: "₱100,000", status: "Approved", readiness: "Ready" },
-          { id: 6, name: "Carlos Mendoza", campaign: "Medical Assistance", amount: "₱45,000", status: "Pending", readiness: "NotReady" },
+          { id: 1, campaignManager: "John Smith", campaign: "Medical Assistance", name: "Maria Santos", amount: "₱50,000", status: "Approved" },
+          { id: 2, campaignManager: "Jane Doe", campaign: "Education Fund", name: "Juan dela Cruz", amount: "₱25,000", status: "Approved" },
+          { id: 3, campaignManager: "Bob Johnson", campaign: "Disaster Relief", name: "Pedro Garcia", amount: "₱75,000", status: "Approved" },
+          { id: 4, campaignManager: "Alice Brown", campaign: "Food Security", name: "Sofia Martinez", amount: "₱30,000", status: "Sent" },
+          { id: 5, campaignManager: "Charlie Wilson", campaign: "Housing Support", name: "Ana Reyes", amount: "₱100,000", status: "Approved" },
+          { id: 6, campaignManager: "John Smith", campaign: "Medical Assistance", name: "Carlos Mendoza", amount: "₱45,000", status: "Pending" },
         ]);
       } finally {
         setLoading(false);
@@ -65,11 +64,11 @@ export default function BeneficiariesList() {
     return (
       <div className={styles.pageContainer}>
         <header className={styles.header}>
-          <h1>Beneficiaries List</h1>
-          <p>Manage approved beneficiaries and send donations</p>
+          <h1>Campaign List</h1>
+          <p>Manage campaigns and send donations to beneficiaries</p>
         </header>
         <div className={styles.tableContainer}>
-          <p>Loading beneficiaries...</p>
+          <p>Loading campaigns...</p>
         </div>
       </div>
     );
@@ -90,39 +89,35 @@ export default function BeneficiariesList() {
   return (
     <div className={styles.pageContainer}>
       <header className={styles.header}>
-        <h1>Beneficiaries List</h1>
-        <p>Manage approved beneficiaries and send donations</p>
+        <h1>Campaign List</h1>
+        <p>Manage campaigns and send donations to beneficiaries</p>
       </header>
       
       <div className={styles.tableContainer}>
-        {/* ... existing table code, just ensure handleOpenModal(item) is attached ... */}
         <table className={styles.dataTable}>
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Campaign</th>
+              <th>Campaign Manager</th>
+              <th>Campaign Name</th>
+              <th>Beneficiary</th>
               <th>Amount Allocated</th>
               <th>Status</th>
-              <th>Readiness</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {list.map((item) => (
               <tr key={item.id}>
-                {/* ... existing table cells ... */}
-                <td className={styles.textDark}>{item.name}</td>
+                <td className={styles.textDark}>{item.campaignManager || 'N/A'}</td>
                 <td className={styles.textRed}>{item.campaign}</td>
+                <td className={styles.textDark}>{item.name}</td>
                 <td className={styles.textDark}>{item.amount}</td>
                 <td><span className={`${styles.badge} ${styles[`badge${item.status}`]}`}>{item.status}</span></td>
-                <td><span className={`${styles.badge} ${styles[`badge${item.readiness}`]}`}>{item.readiness === 'NotReady' ? 'Not Ready' : item.readiness}</span></td>
                 <td>
                   {item.status === "Sent" ? (
                     <span className={styles.actionTextCompleted}>Completed</span>
                   ) : item.status === "Pending" ? (
                     <span className={styles.actionTextDisabled}>Approval Pending</span>
-                  ) : item.readiness === "NotReady" ? (
-                    <span className={styles.actionTextDisabled}>Not Ready</span>
                   ) : (
                     <button 
                       className={styles.actionBtn}
