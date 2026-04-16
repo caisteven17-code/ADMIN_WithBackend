@@ -5,23 +5,24 @@ import { DashboardMetrics } from "./interfaces/dashboard-metrics.interface";
 @Injectable()
 export class DashboardService {
   /**
-   * Get total count of beneficiaries from user_profiles table
+   * Get total count of approved beneficiaries from beneficiary_profiles table
    */
   private async getTotalBeneficiaries(): Promise<number> {
     try {
       const { count, error, data } = await supabase
         .from("beneficiary_profiles")
-        .select("*", { count: "exact", head: false });
+        .select("*", { count: "exact", head: false })
+        .eq("status", "approved");
 
       if (error) {
-        console.error("Supabase error fetching total beneficiaries:", error);
+        console.error("Supabase error fetching approved beneficiaries:", error);
         return 0;
       }
-      console.log("✅ Total beneficiaries count:", count);
+      console.log("✅ Approved beneficiaries count:", count);
       console.log("📊 Sample data:", data?.slice(0, 3));
       return count || 0;
     } catch (error) {
-      console.error("Error fetching total beneficiaries:", error);
+      console.error("Error fetching approved beneficiaries:", error);
       return 0;
     }
   }

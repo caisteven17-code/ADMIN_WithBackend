@@ -24,26 +24,57 @@ export class BeneficiariesService {
     try {
       const offset = (page - 1) * limit;
 
-      // Get total count from beneficiary_profiles table
+      // Get total count from hc_campaigns table
       const { count } = await supabase
-        .from('beneficiary_profiles')
-        .select('*', { count: 'exact' });
+        .from('hc_campaigns')
+        .select('*', { count: 'exact', head: true });
 
-      // Get paginated data
+      // Get paginated data from hc_campaigns
       const { data, error } = await supabase
-        .from('beneficiary_profiles')
+        .from('hc_campaigns')
         .select('*')
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
 
       if (error) {
-        console.error('❌ Error fetching beneficiaries:', error);
-        throw new Error(`Failed to fetch beneficiaries: ${error.message}`);
+        console.error('❌ Error fetching campaigns for beneficiaries list:', error);
+        throw new Error(`Failed to fetch campaigns: ${error.message}`);
       }
 
-      console.log(`✅ Retrieved ${data?.length || 0} beneficiaries from ${count || 0} total`);
+      // Fetch manager names
+      const managerIds = [...new Set(data?.map(c => c.created_by).filter(id => id))];
+      let managersMap: Record<string, string> = {};
+      
+      if (managerIds.length > 0) {
+        const { data: managers } = await supabase
+          .from('campaign_manager_profiles')
+          .select('id, first_name, last_name, full_name, organization_name')
+          .in('id', managerIds);
+          
+        if (managers) {
+          managersMap = managers.reduce((acc, m) => {
+            const name = (m.first_name ? `${m.first_name} ${m.last_name || ''}`.trim() : m.full_name);
+            acc[m.id] = name || m.organization_name || 'Unknown Manager';
+            return acc;
+          }, {} as Record<string, string>);
+        }
+      }
+
+      const formattedData = (data || []).map(campaign => ({
+        id: campaign.id,
+        first_name: campaign.title, // Maps to 'Beneficiary' column on frontend
+        last_name: '',              // Combined with first_name
+        campaign: campaign.title,   // Maps to 'Campaign Name' column
+        campaign_manager_name: campaign.created_by ? managersMap[campaign.created_by] || 'Unknown Manager' : 'Unknown Manager',
+        allocated_amount: campaign.collected_amount, // Maps to 'Amount Allocated'
+        status: campaign.status,
+        verification_status: campaign.status, // Fallback for frontend
+        created_at: campaign.created_at,
+      }));
+
+      console.log(`✅ Retrieved ${data?.length || 0} campaigns masquerading as beneficiaries from ${count || 0} total`);
       return {
-        data: data || [],
+        data: formattedData as unknown as Beneficiary[],
         total: count || 0,
         page,
         limit,

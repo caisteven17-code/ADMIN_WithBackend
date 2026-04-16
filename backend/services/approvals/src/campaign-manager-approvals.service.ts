@@ -52,7 +52,12 @@ export class CampaignManagerApprovalsService {
       const managersWithEmail = await Promise.all(
         (data || []).map(async (manager) => {
           if (manager.email) {
-            return manager;
+            return {
+              ...manager,
+              organization: manager.organization_name,
+              verification_status: manager.status,
+              documents_verified: !!manager.organization_document_key
+            };
           }
           
           if (manager.auth_user_id) {
@@ -63,10 +68,21 @@ export class CampaignManagerApprovalsService {
               .single();
             
             if (authUser?.email) {
-              return { ...manager, email: authUser.email };
+              return {
+                ...manager,
+                email: authUser.email,
+                organization: manager.organization_name,
+                verification_status: manager.status,
+                documents_verified: !!manager.organization_document_key
+              };
             }
           }
-          return manager;
+          return {
+            ...manager,
+            organization: manager.organization_name,
+            verification_status: manager.status,
+            documents_verified: !!manager.organization_document_key
+          };
         })
       );
       

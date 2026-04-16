@@ -52,8 +52,14 @@ export class BeneficiaryApprovalsService {
       // Fetch user emails from auth.users for beneficiaries that don't have email
       const beneficiariesWithEmail = await Promise.all(
         (data || []).map(async (beneficiary) => {
+          const mappedBeneficiary = {
+            ...beneficiary,
+            documents_submitted: !!beneficiary.id_verification_key,
+            bank_details_submitted: !!(beneficiary.bank_name && beneficiary.account_number),
+          };
+
           if (beneficiary.email) {
-            return beneficiary;
+            return mappedBeneficiary;
           }
           
           if (beneficiary.auth_user_id) {
@@ -64,10 +70,10 @@ export class BeneficiaryApprovalsService {
               .single();
             
             if (authUser?.email) {
-              return { ...beneficiary, email: authUser.email };
+              return { ...mappedBeneficiary, email: authUser.email };
             }
           }
-          return beneficiary;
+          return mappedBeneficiary;
         })
       );
       

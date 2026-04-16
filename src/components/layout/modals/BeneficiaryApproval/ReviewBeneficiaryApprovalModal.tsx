@@ -250,7 +250,7 @@ export default function ReviewBeneficiaryApprovalModal({
           ) : (
             <>
               <button 
-                className={styles.approveBtn} 
+                className={styles.rejectBtn} 
                 onClick={handleReject}
                 disabled={loading}
               >

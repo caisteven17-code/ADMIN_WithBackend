@@ -9,10 +9,20 @@ import { findAvailablePort } from '@shared/port-finder';
 
 @Controller()
 export class GatewayController {
-  private authProxy = httpProxy(`http://127.0.0.1:${SERVICE_PORTS.AUTH}`);
-  private beneficiaryProxy = httpProxy(`http://127.0.0.1:${SERVICE_PORTS.BENEFICIARY}`);
-  private approvalsProxy = httpProxy(`http://127.0.0.1:${SERVICE_PORTS.APPROVALS}`);
-  private analyticsProxy = httpProxy(`http://127.0.0.1:${SERVICE_PORTS.ANALYTICS}`);
+  private createProxy(target: string) {
+    return httpProxy(target, {
+      proxyReqPathResolver: (req: Request) => {
+        const path = req.originalUrl.replace(/^\/api/, '');
+        console.log(`[GATEWAY] Rewriting path to: ${path}`);
+        return path;
+      }
+    });
+  }
+
+  private authProxy = this.createProxy(`http://127.0.0.1:${SERVICE_PORTS.AUTH}`);
+  private beneficiaryProxy = this.createProxy(`http://127.0.0.1:${SERVICE_PORTS.BENEFICIARY}`);
+  private approvalsProxy = this.createProxy(`http://127.0.0.1:${SERVICE_PORTS.APPROVALS}`);
+  private analyticsProxy = this.createProxy(`http://127.0.0.1:${SERVICE_PORTS.ANALYTICS}`);
 
   @All('auth/*')
   handleAuth(@Req() req: Request, @Res() res: Response) {
@@ -23,6 +33,12 @@ export class GatewayController {
   @All('beneficiaries*')
   handleBeneficiaries(@Req() req: Request, @Res() res: Response) {
     console.log(`[GATEWAY] Proxying Beneficiary request: ${req.method} ${req.url}`);
+    this.beneficiaryProxy(req, res);
+  }
+
+  @All('campaigns*')
+  handleCampaigns(@Req() req: Request, @Res() res: Response) {
+    console.log(`[GATEWAY] Proxying Campaigns request: ${req.method} ${req.url}`);
     this.beneficiaryProxy(req, res);
   }
 

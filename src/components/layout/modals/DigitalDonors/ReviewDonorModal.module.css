@@ -110,7 +110,7 @@
 .checkbox {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: space-between;
   font-size: 0.8rem;
   color: #374151;
   cursor: pointer;
@@ -118,6 +118,8 @@
   padding: 0.5rem;
   background-color: #f9fafb;
   border-radius: 6px;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .checkbox input {
@@ -125,16 +127,12 @@
   height: 16px;
   accent-color: #a32a2a;
   cursor: pointer;
-}
-
-.checkbox {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-shrink: 0;
 }
 
 .statusIcon {
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .textarea {
@@ -188,8 +186,14 @@
   transition: background-color 0.2s;
 }
 
-.rejectBtn:hover {
+.rejectBtn:hover:not(:disabled) {
   background-color: #8b1a1a;
+}
+
+.rejectBtn:disabled {
+  background-color: #f87171;
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .cancelBtn {

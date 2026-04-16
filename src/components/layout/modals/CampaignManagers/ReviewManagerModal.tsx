@@ -137,7 +137,7 @@ export default function ReviewManagerModal({ isOpen, onClose, managerData, onUpd
             </>
           ) : (
             <>
-              <button className={styles.approveBtn} onClick={handleReject}>
+              <button className={styles.rejectBtn} onClick={handleReject}>
                 Confirm Reject
               </button>
               <button className={styles.cancelBtn} onClick={() => setShowRejectForm(false)}>
