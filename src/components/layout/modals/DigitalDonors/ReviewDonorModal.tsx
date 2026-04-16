@@ -12,33 +12,117 @@ interface ReviewDonorModalProps {
   onUpdate?: (donor: any) => void;
 }
 
+function getSupabaseImageUrl(filePath: string): string {
+  if (!filePath) return "";
+  
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://hycsbfugiboutvgbvueg.supabase.co";
+  const bucketName = "donor-ids";
+  
+  // If filePath is already a full URL, return it
+  if (filePath.startsWith("http")) {
+    return filePath;
+  }
+  
+  // Construct the public URL
+  return `${supabaseUrl}/storage/v1/object/public/${bucketName}/${filePath}`;
+}
+
 export default function ReviewDonorModal({ isOpen, onClose, donorData, onUpdate }: ReviewDonorModalProps) {
   const [idVerified, setIdVerified] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectForm, setShowRejectForm] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   if (!donorData) return null;
 
-  const handleApprove = () => {
+  const idImageUrl = getSupabaseImageUrl(donorData?.idVerificationKey);
+
+  const handleApprove = async () => {
     if (!idVerified) {
       alert("Please verify Identity Document before approving");
       return;
     }
-    const updatedDonor = { ...donorData, idVerified, status: "Approved" };
-    if (onUpdate) onUpdate(updatedDonor);
-    alert(`Approved: ${donorData.name}`);
-    onClose();
+
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem('admin_token');
+      const adminInfoStr = localStorage.getItem('admin_info') || '{}';
+      const adminInfo = JSON.parse(adminInfoStr);
+      const adminId = adminInfo.id || 'admin';
+
+      const response = await fetch(`/api/approvals/digital-donors/${donorData.id}/approve`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          adminId: adminId,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        alert(`Failed to approve: ${error.message || "Unknown error"}`);
+        return;
+      }
+
+      const result = await response.json();
+      const updatedDonor = { ...donorData, idVerified, status: "Verified" };
+      if (onUpdate) onUpdate(updatedDonor);
+      alert(`Approved: ${donorData.name}`);
+      onClose();
+    } catch (error) {
+      console.error("Error approving donor:", error);
+      alert(`Error: ${error instanceof Error ? error.message : "Failed to approve"}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleReject = () => {
+  const handleReject = async () => {
     if (!rejectionReason.trim()) {
       alert("Please provide a rejection reason");
       return;
     }
-    const updatedDonor = { ...donorData, idVerified, status: "Rejected" };
-    if (onUpdate) onUpdate(updatedDonor);
-    alert(`Rejected: ${donorData.name}\nReason: ${rejectionReason}`);
-    onClose();
+
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem('admin_token');
+      const adminInfoStr = localStorage.getItem('admin_info') || '{}';
+      const adminInfo = JSON.parse(adminInfoStr);
+      const adminId = adminInfo.id || 'admin';
+
+      const response = await fetch(`/api/approvals/digital-donors/${donorData.id}/reject`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          adminId: adminId,
+          reason: rejectionReason,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        alert(`Failed to reject: ${error.message || "Unknown error"}`);
+        return;
+      }
+
+      const result = await response.json();
+      const updatedDonor = { ...donorData, idVerified, status: "Rejected" };
+      if (onUpdate) onUpdate(updatedDonor);
+      alert(`Rejected: ${donorData.name}\nReason: ${rejectionReason}`);
+      setShowRejectForm(false);
+      onClose();
+    } catch (error) {
+      console.error("Error rejecting donor:", error);
+      alert(`Error: ${error instanceof Error ? error.message : "Failed to reject"}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -49,14 +133,60 @@ export default function ReviewDonorModal({ isOpen, onClose, donorData, onUpdate 
     >
       <div className={styles.container}>
         <div className={styles.section}>
+          <h3 className={styles.sectionTitle}>Donor Information</h3>
+          <div className={styles.infoGrid}>
+            <div className={styles.field}>
+              <label className={styles.label}>Name</label>
+              <p className={styles.value}>{donorData?.name || 'N/A'}</p>
+            </div>
+            <div className={styles.field}>
+              <label className={styles.label}>Email</label>
+              <p className={styles.value}>{donorData?.email || 'N/A'}</p>
+            </div>
+            <div className={styles.field}>
+              <label className={styles.label}>Phone</label>
+              <p className={styles.value}>{donorData?.phone || 'N/A'}</p>
+            </div>
+            <div className={styles.field}>
+              <label className={styles.label}>Company</label>
+              <p className={styles.value}>{donorData?.company || 'N/A'}</p>
+            </div>
+            <div className={styles.field}>
+              <label className={styles.label}>Date</label>
+              <p className={styles.value}>{donorData?.date || 'N/A'}</p>
+            </div>
+            <div className={styles.field}>
+              <label className={styles.label}>Status</label>
+              <p className={styles.value}>{donorData?.status || 'N/A'}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.section}>
           <h3 className={styles.sectionTitle}>Uploaded Documents</h3>
           
           <div className={styles.field}>
             <label className={styles.label}>Identity Document</label>
             <div className={styles.documentPreview}>
               <div className={styles.previewBox}>
-                <Image size={32} />
-                <span>ID Document Preview</span>
+                {idImageUrl ? (
+                  <div className={styles.imageScrollContainer}>
+                    <img 
+                      src={idImageUrl} 
+                      alt="ID Document"
+                      className={styles.documentImage}
+                      onError={(e) => {
+                        console.error('Failed to load image:', idImageUrl);
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className={styles.placeholderContent}>
+                    <Image size={32} />
+                    <span>ID Document Preview</span>
+                  </div>
+                )}
               </div>
             </div>
             <label className={styles.checkbox}>
@@ -88,19 +218,35 @@ export default function ReviewDonorModal({ isOpen, onClose, donorData, onUpdate 
         <div className={styles.actions}>
           {!showRejectForm ? (
             <>
-              <button className={styles.approveBtn} onClick={handleApprove}>
-                Approve
+              <button 
+                className={styles.approveBtn} 
+                onClick={handleApprove}
+                disabled={isLoading}
+              >
+                {isLoading ? "Processing..." : "Approve"}
               </button>
-              <button className={styles.rejectBtn} onClick={() => setShowRejectForm(true)}>
+              <button 
+                className={styles.rejectBtn} 
+                onClick={() => setShowRejectForm(true)}
+                disabled={isLoading}
+              >
                 Reject
               </button>
             </>
           ) : (
             <>
-              <button className={styles.approveBtn} onClick={handleReject}>
-                Confirm Reject
+              <button 
+                className={styles.rejectBtn} 
+                onClick={handleReject}
+                disabled={isLoading}
+              >
+                {isLoading ? "Processing..." : "Confirm Reject"}
               </button>
-              <button className={styles.cancelBtn} onClick={() => setShowRejectForm(false)}>
+              <button 
+                className={styles.cancelBtn} 
+                onClick={() => setShowRejectForm(false)}
+                disabled={isLoading}
+              >
                 Cancel
               </button>
             </>

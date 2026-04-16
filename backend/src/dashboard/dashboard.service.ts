@@ -10,9 +10,8 @@ export class DashboardService {
   private async getTotalBeneficiaries(): Promise<number> {
     try {
       const { count, error, data } = await supabase
-        .from("user_profiles")
-        .select("*", { count: "exact", head: false })
-        .eq("role", "beneficiary");
+        .from("beneficiary_profiles")
+        .select("*", { count: "exact", head: false });
 
       if (error) {
         console.error("Supabase error fetching total beneficiaries:", error);
@@ -28,26 +27,42 @@ export class DashboardService {
   }
 
   /**
-   * Get count of pending approvals (users with no last_sign_in_at)
-   * Users who haven't logged in yet are considered pending approval
+   * Get count of pending approvals across all three tables:
+   * - digital_donor_profiles
+   * - campaign_manager_profiles
+   * - beneficiary_profiles
    */
   private async getPendingApprovals(): Promise<number> {
     try {
-      // Query auth.users table for users with no last login
-      const { data, error } = await supabase.auth.admin.listUsers();
+      // Query all three tables in parallel for pending status
+      const [donorsResult, managersResult, beneficiariesResult] = await Promise.all([
+        supabase
+          .from('digital_donor_profiles')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'pending'),
+        supabase
+          .from('campaign_manager_profiles')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'pending'),
+        supabase
+          .from('beneficiary_profiles')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'pending'),
+      ]);
 
-      if (error) {
-        console.error("Supabase error fetching pending approvals:", error);
-        return 0;
-      }
+      const pendingDonors = donorsResult.count || 0;
+      const pendingManagers = managersResult.count || 0;
+      const pendingBeneficiaries = beneficiariesResult.count || 0;
 
-      // Count users who have never logged in (last_sign_in_at is null)
-      const pendingCount = data.users.filter(
-        (user) => user.last_sign_in_at === null
-      ).length;
+      const totalPending = pendingDonors + pendingManagers + pendingBeneficiaries;
 
-      console.log("🔍 Pending approvals (no last login):", pendingCount);
-      return pendingCount;
+      console.log("🔍 Pending approvals breakdown:");
+      console.log(`  - Digital Donors: ${pendingDonors}`);
+      console.log(`  - Campaign Managers: ${pendingManagers}`);
+      console.log(`  - Beneficiaries: ${pendingBeneficiaries}`);
+      console.log(`  - Total Pending: ${totalPending}`);
+
+      return totalPending;
     } catch (error) {
       console.error("Error fetching pending approvals:", error);
       return 0;

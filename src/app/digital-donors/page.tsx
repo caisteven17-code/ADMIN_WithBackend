@@ -49,14 +49,15 @@ export default function DigitalDonors() {
         // Map backend data to frontend format
         const formattedData = result.data.map((d: any) => ({
           id: d.id,
-          name: `${d.first_name || ''} ${d.last_name || ''}`.trim() || d.full_name || 'N/A',
+          name: d.name || `${d.first_name || ''} ${d.last_name || ''}`.trim() || d.full_name || 'N/A',
           email: d.email,
           date: d.created_at?.split('T')[0] || '',
-          idVerified: d.id_verified || false,
-          status: d.verification_status?.charAt(0).toUpperCase() + d.verification_status?.slice(1) || 'Pending',
+          idVerified: !!d.id_verification_key || d.id_verified || false,
+          idVerificationKey: d.id_verification_key,
+          status: d.status?.charAt(0).toUpperCase() + d.status?.slice(1) || 'Pending',
           age: d.age,
           gender: d.gender,
-          occupation: d.occupation,
+          company: d.company,
           phone: d.phone,
           address: d.address,
           image: d.image || "/HopeCard%20Logo.png"

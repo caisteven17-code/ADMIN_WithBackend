@@ -9,7 +9,7 @@ export interface BeneficiaryApproval {
   email: string;
   phone: string;
   address: string;
-  verification_status: string;
+  status: string;
   created_at: string;
   [key: string]: any;
 }
@@ -19,7 +19,7 @@ export class BeneficiaryApprovalsService {
   constructor(private readonly activityService: ActivityLogger) {}
 
   /**
-   * Get all pending beneficiary approvals from user_profiles table
+   * Get all pending beneficiary approvals from beneficiary_profiles table
    */
   async getPendingApprovals(
     page: number = 1,
@@ -30,17 +30,15 @@ export class BeneficiaryApprovalsService {
 
       // Get total count of pending
       const { count } = await supabase
-        .from('user_profiles')
+        .from('beneficiary_profiles')
         .select('*', { count: 'exact' })
-        .eq('role', 'beneficiary')
-        .eq('verification_status', 'pending');
+        .eq('status', 'pending');
 
       // Get paginated pending beneficiaries
       const { data, error } = await supabase
-        .from('user_profiles')
+        .from('beneficiary_profiles')
         .select('*')
-        .eq('role', 'beneficiary')
-        .eq('verification_status', 'pending')
+        .eq('status', 'pending')
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
 
@@ -50,7 +48,30 @@ export class BeneficiaryApprovalsService {
       }
 
       console.log('✅ Pending beneficiary approvals:', count);
-      return { data: data || [], total: count || 0, page, limit };
+      
+      // Fetch user emails from auth.users for beneficiaries that don't have email
+      const beneficiariesWithEmail = await Promise.all(
+        (data || []).map(async (beneficiary) => {
+          if (beneficiary.email) {
+            return beneficiary;
+          }
+          
+          if (beneficiary.auth_user_id) {
+            const { data: authUser } = await supabase
+              .from('auth.users')
+              .select('email')
+              .eq('id', beneficiary.auth_user_id)
+              .single();
+            
+            if (authUser?.email) {
+              return { ...beneficiary, email: authUser.email };
+            }
+          }
+          return beneficiary;
+        })
+      );
+      
+      return { data: beneficiariesWithEmail || [], total: count || 0, page, limit };
     } catch (error) {
       console.error('Error fetching pending approvals:', error);
       return { data: [], total: 0, page, limit };
@@ -58,7 +79,7 @@ export class BeneficiaryApprovalsService {
   }
 
   /**
-   * Approve a beneficiary application from user_profiles table
+   * Approve a beneficiary application from beneficiary_profiles table
    */
   async approveBeneficiary(
     beneficiaryId: string,
@@ -68,17 +89,15 @@ export class BeneficiaryApprovalsService {
     try {
       // Get beneficiary name for activity log
       const { data: beneficiaryData } = await supabase
-        .from('user_profiles')
+        .from('beneficiary_profiles')
         .select('first_name, last_name')
         .eq('id', beneficiaryId)
         .single();
 
       const { data, error } = await supabase
-        .from('user_profiles')
+        .from('beneficiary_profiles')
         .update({
-          verification_status: 'verified',
-          verified_by: adminId,
-          verified_at: new Date().toISOString(),
+          status: 'approved',
           updated_at: new Date().toISOString(),
         })
         .eq('id', beneficiaryId)
@@ -116,7 +135,7 @@ export class BeneficiaryApprovalsService {
   }
 
   /**
-   * Reject a beneficiary application from user_profiles table
+   * Reject a beneficiary application from beneficiary_profiles table
    */
   async rejectBeneficiary(
     beneficiaryId: string,
@@ -127,17 +146,15 @@ export class BeneficiaryApprovalsService {
     try {
       // Get beneficiary name for activity log
       const { data: beneficiaryData } = await supabase
-        .from('user_profiles')
+        .from('beneficiary_profiles')
         .select('first_name, last_name')
         .eq('id', beneficiaryId)
         .single();
 
       const { data, error } = await supabase
-        .from('user_profiles')
+        .from('beneficiary_profiles')
         .update({
-          verification_status: 'rejected',
-          verified_by: adminId,
-          verified_at: new Date().toISOString(),
+          status: 'rejected',
           rejection_reason: reason || null,
           updated_at: new Date().toISOString(),
         })
@@ -176,13 +193,13 @@ export class BeneficiaryApprovalsService {
   }
 
   /**
-   * Get approval history for a beneficiary from user_profiles table
+   * Get approval history for a beneficiary from beneficiary_profiles table
    */
   async getApprovalHistory(beneficiaryId: string): Promise<{ status: string; verified_by?: string; verified_at?: string; rejection_reason?: string }> {
     try {
       const { data, error } = await supabase
-        .from('user_profiles')
-        .select('verification_status, verified_by, verified_at, rejection_reason')
+        .from('beneficiary_profiles')
+        .select('status')
         .eq('id', beneficiaryId)
         .single();
 
@@ -192,10 +209,7 @@ export class BeneficiaryApprovalsService {
       }
 
       return {
-        status: data?.verification_status || 'unknown',
-        verified_by: data?.verified_by,
-        verified_at: data?.verified_at,
-        rejection_reason: data?.rejection_reason,
+        status: data?.status || 'unknown',
       };
     } catch (error) {
       console.error('Error fetching approval history:', error);
@@ -219,7 +233,7 @@ export class BeneficiaryApprovalsService {
     try {
       // Get beneficiary details for logging
       const { data: beneficiaryData } = await supabase
-        .from('user_profiles')
+        .from('beneficiary_profiles')
         .select('first_name, last_name, email, allocated_amount')
         .eq('id', beneficiaryId)
         .single();
@@ -275,4 +289,3 @@ export class BeneficiaryApprovalsService {
     }
   }
 }
-

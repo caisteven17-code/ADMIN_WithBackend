@@ -8,7 +8,7 @@ export interface CampaignManagerApproval {
   email: string;
   phone: string;
   organization: string;
-  verification_status: string;
+  status: string;
   created_at: string;
   [key: string]: any;
 }
@@ -18,7 +18,7 @@ export class CampaignManagerApprovalsService {
   constructor(private readonly activityService: ActivityLogger) {}
 
   /**
-   * Get all pending campaign manager approvals from user_profiles table
+   * Get all pending campaign manager approvals from campaign_manager_profiles table
    */
   async getPendingApprovals(
     page: number = 1,
@@ -29,17 +29,15 @@ export class CampaignManagerApprovalsService {
 
       // Get total count of pending
       const { count } = await supabase
-        .from('user_profiles')
+        .from('campaign_manager_profiles')
         .select('*', { count: 'exact' })
-        .eq('role', 'campaign_manager')
-        .eq('verification_status', 'pending');
+        .eq('status', 'pending');
 
       // Get paginated pending campaign managers
       const { data, error } = await supabase
-        .from('user_profiles')
+        .from('campaign_manager_profiles')
         .select('*')
-        .eq('role', 'campaign_manager')
-        .eq('verification_status', 'pending')
+        .eq('status', 'pending')
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
 
@@ -49,7 +47,30 @@ export class CampaignManagerApprovalsService {
       }
 
       console.log('✅ Pending campaign manager approvals:', count);
-      return { data: data || [], total: count || 0, page, limit };
+      
+      // Fetch user emails from auth.users for managers that don't have email
+      const managersWithEmail = await Promise.all(
+        (data || []).map(async (manager) => {
+          if (manager.email) {
+            return manager;
+          }
+          
+          if (manager.auth_user_id) {
+            const { data: authUser } = await supabase
+              .from('auth.users')
+              .select('email')
+              .eq('id', manager.auth_user_id)
+              .single();
+            
+            if (authUser?.email) {
+              return { ...manager, email: authUser.email };
+            }
+          }
+          return manager;
+        })
+      );
+      
+      return { data: managersWithEmail || [], total: count || 0, page, limit };
     } catch (error) {
       console.error('Error fetching pending approvals:', error);
       return { data: [], total: 0, page, limit };
@@ -57,7 +78,7 @@ export class CampaignManagerApprovalsService {
   }
 
   /**
-   * Approve a campaign manager application from user_profiles table
+   * Approve a campaign manager application from campaign_manager_profiles table
    */
   async approveCampaignManager(
     campaignManagerId: string,
@@ -65,11 +86,9 @@ export class CampaignManagerApprovalsService {
   ): Promise<{ success: boolean; message: string; data?: any }> {
     try {
       const { data, error } = await supabase
-        .from('user_profiles')
+        .from('campaign_manager_profiles')
         .update({
-          verification_status: 'verified',
-          verified_by: adminId,
-          verified_at: new Date().toISOString(),
+          status: 'approved',
           updated_at: new Date().toISOString(),
         })
         .eq('id', campaignManagerId)
@@ -93,7 +112,7 @@ export class CampaignManagerApprovalsService {
   }
 
   /**
-   * Reject a campaign manager application from user_profiles table
+   * Reject a campaign manager application from campaign_manager_profiles table
    */
   async rejectCampaignManager(
     campaignManagerId: string,
@@ -102,11 +121,9 @@ export class CampaignManagerApprovalsService {
   ): Promise<{ success: boolean; message: string; data?: any }> {
     try {
       const { data, error } = await supabase
-        .from('user_profiles')
+        .from('campaign_manager_profiles')
         .update({
-          verification_status: 'rejected',
-          verified_by: adminId,
-          verified_at: new Date().toISOString(),
+          status: 'rejected',
           rejection_reason: reason || null,
           updated_at: new Date().toISOString(),
         })
@@ -131,13 +148,13 @@ export class CampaignManagerApprovalsService {
   }
 
   /**
-   * Get approval history for a campaign manager from user_profiles table
+   * Get approval history for a campaign manager from campaign_manager_profiles table
    */
   async getApprovalHistory(campaignManagerId: string): Promise<{ status: string; verified_by?: string; verified_at?: string; rejection_reason?: string }> {
     try {
       const { data, error } = await supabase
-        .from('user_profiles')
-        .select('verification_status, verified_by, verified_at, rejection_reason')
+        .from('campaign_manager_profiles')
+        .select('status')
         .eq('id', campaignManagerId)
         .single();
 
@@ -147,10 +164,7 @@ export class CampaignManagerApprovalsService {
       }
 
       return {
-        status: data?.verification_status || 'unknown',
-        verified_by: data?.verified_by,
-        verified_at: data?.verified_at,
-        rejection_reason: data?.rejection_reason,
+        status: data?.status || 'unknown',
       };
     } catch (error) {
       console.error('Error fetching approval history:', error);

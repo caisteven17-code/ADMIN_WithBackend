@@ -24,17 +24,15 @@ export class BeneficiariesService {
     try {
       const offset = (page - 1) * limit;
 
-      // Get total count from user_profiles table
+      // Get total count from beneficiary_profiles table
       const { count } = await supabase
-        .from('user_profiles')
-        .select('*', { count: 'exact' })
-        .eq('role', 'beneficiary');
+        .from('beneficiary_profiles')
+        .select('*', { count: 'exact' });
 
       // Get paginated data
       const { data, error } = await supabase
-        .from('user_profiles')
+        .from('beneficiary_profiles')
         .select('*')
-        .eq('role', 'beneficiary')
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
 
@@ -59,10 +57,9 @@ export class BeneficiariesService {
   async getBeneficiaryById(id: string): Promise<Beneficiary> {
     try {
       const { data, error } = await supabase
-        .from('user_profiles')
+        .from('beneficiary_profiles')
         .select('*')
         .eq('id', id)
-        .eq('role', 'beneficiary')
         .single();
 
       if (error) {
@@ -91,18 +88,16 @@ export class BeneficiariesService {
     try {
       const offset = (page - 1) * limit;
 
-      // Get total count for this status from user_profiles
+      // Get total count for this status from beneficiary_profiles
       const { count } = await supabase
-        .from('user_profiles')
+        .from('beneficiary_profiles')
         .select('*', { count: 'exact' })
-        .eq('role', 'beneficiary')
         .eq('status', status);
 
       // Get paginated data
       const { data, error } = await supabase
-        .from('user_profiles')
+        .from('beneficiary_profiles')
         .select('*')
-        .eq('role', 'beneficiary')
         .eq('status', status)
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
@@ -134,18 +129,16 @@ export class BeneficiariesService {
       const offset = (page - 1) * limit;
       const searchQuery = `%${query}%`;
 
-      // Count total matching records from user_profiles
+      // Count total matching records from beneficiary_profiles
       const { count } = await supabase
-        .from('user_profiles')
+        .from('beneficiary_profiles')
         .select('*', { count: 'exact' })
-        .eq('role', 'beneficiary')
         .or(`first_name.ilike.${searchQuery},last_name.ilike.${searchQuery},email.ilike.${searchQuery}`);
 
       // Get paginated data
       const { data, error } = await supabase
-        .from('user_profiles')
+        .from('beneficiary_profiles')
         .select('*')
-        .eq('role', 'beneficiary')
         .or(`first_name.ilike.${searchQuery},last_name.ilike.${searchQuery},email.ilike.${searchQuery}`)
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
@@ -170,15 +163,9 @@ export class BeneficiariesService {
 
   async createBeneficiary(beneficiaryData: Partial<Beneficiary>): Promise<Beneficiary> {
     try {
-      // Add role: 'beneficiary' when creating
-      const dataWithRole = {
-        ...beneficiaryData,
-        role: 'beneficiary',
-      };
-
       const { data, error } = await supabase
-        .from('user_profiles')
-        .insert([dataWithRole])
+        .from('beneficiary_profiles')
+        .insert([beneficiaryData])
         .select()
         .single();
 
@@ -218,7 +205,7 @@ export class BeneficiariesService {
   ): Promise<Beneficiary> {
     try {
       const { data, error } = await supabase
-        .from('beneficiaries')
+        .from('beneficiary_profiles')
         .update({ ...updates, updated_at: new Date().toISOString() })
         .eq('id', id)
         .select()
@@ -244,7 +231,7 @@ export class BeneficiariesService {
   async deleteBeneficiary(id: string): Promise<{ success: boolean; message: string }> {
     try {
       const { error } = await supabase
-        .from('beneficiaries')
+        .from('beneficiary_profiles')
         .delete()
         .eq('id', id);
 
