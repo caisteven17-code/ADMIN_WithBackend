@@ -3,7 +3,7 @@ import { AuthService } from "./auth.service";
 import { Protected } from "@shared/protected.decorator";
 import { supabase } from "@shared/supabaseClient";
 
-@Controller("api/auth")
+@Controller("auth")
 export class AuthController {
   constructor(private authService: AuthService) {}
 

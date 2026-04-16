@@ -2,7 +2,7 @@ import { Controller, Get, Post, Param, Body, Query, Req } from '@nestjs/common';
 import { BeneficiaryApprovalsService } from './beneficiary-approvals.service';
 import { Protected } from '@shared/protected.decorator';
 
-@Controller('api/approvals/beneficiaries')
+@Controller('approvals/beneficiaries')
 export class BeneficiaryApprovalsController {
   constructor(private readonly approvalsService: BeneficiaryApprovalsService) {}
 

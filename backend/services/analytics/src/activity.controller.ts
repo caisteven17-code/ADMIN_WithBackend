@@ -14,7 +14,7 @@ import { ActivityService, Activity } from './activity.service';
 import { Protected } from '@shared/protected.decorator';
 import { supabase } from '@shared/supabaseClient';
 
-@Controller('api/activity')
+@Controller('activity')
 export class ActivityController {
   constructor(private activityService: ActivityService) {}
 

@@ -23,6 +23,8 @@ export async function POST(request: NextRequest) {
 
     // Call backend API to handle login and trigger OTP
     const backendUrl = await getBackendUrlServer();
+    console.log(`🌐 Calling backend: ${backendUrl}/api/auth/login`);
+
     const backendResponse = await fetch(`${backendUrl}/api/auth/login`, {
       method: 'POST',
       headers: {
@@ -31,17 +33,32 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({ email, password }),
     });
 
-    const backendData = await backendResponse.json();
+    console.log(`📊 Backend responded with status: ${backendResponse.status}`);
 
-    console.log('📊 Backend response status:', backendResponse.status);
-    console.log('📊 Backend response data:', backendData);
+    // Check if response is JSON
+    const contentType = backendResponse.headers.get('content-type');
+    let backendData: any = {};
+    
+    if (contentType && contentType.includes('application/json')) {
+      backendData = await backendResponse.json();
+      console.log('📊 Backend JSON data:', backendData);
+    } else {
+      const text = await backendResponse.text();
+      console.error('❌ Backend returned non-JSON response:', text.substring(0, 200));
+      return Response.json(
+        { 
+          success: false, 
+          error: `Backend error (${backendResponse.status}): Invalid response format`,
+          details: text.substring(0, 100)
+        },
+        { status: 500 }
+      );
+    }
 
     if (!backendResponse.ok) {
       console.log('❌ Backend login failed with status', backendResponse.status);
-      // Extract error message from NestJS exception or custom response
       const errorMessage = backendData.error || backendData.message || 'Login failed';
-      console.log('❌ Error message:', errorMessage);
-      return NextResponse.json(
+      return Response.json(
         { success: false, error: errorMessage },
         { status: backendResponse.status }
       );
@@ -49,8 +66,7 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Login successful, OTP should be sent:', email);
 
-    // OTP ENABLED: Backend has sent OTP, frontend will redirect to verify page
-    return NextResponse.json(
+    return Response.json(
       {
         success: true,
         message: 'Login successful. Check your email for OTP.',
@@ -61,7 +77,7 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error('Login error:', error);
-    return NextResponse.json(
+    return Response.json(
       { error: 'An error occurred during login' },
       { status: 500 }
     );

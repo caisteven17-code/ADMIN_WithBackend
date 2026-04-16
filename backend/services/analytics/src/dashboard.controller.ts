@@ -3,7 +3,7 @@ import { DashboardService } from "./dashboard.service";
 import { Protected } from "@shared/protected.decorator";
 import { DashboardMetrics } from "./interfaces/dashboard-metrics.interface";
 
-@Controller("api/dashboard")
+@Controller("dashboard")
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 

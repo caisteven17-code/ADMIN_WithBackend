@@ -2,7 +2,7 @@ import { Controller, Get, Post, Param, Body, Query } from '@nestjs/common';
 import { CampaignManagerApprovalsService } from './campaign-manager-approvals.service';
 import { Protected } from '@shared/protected.decorator';
 
-@Controller('api/approvals/campaign-managers')
+@Controller('approvals/campaign-managers')
 export class CampaignManagerApprovalsController {
   constructor(private readonly approvalsService: CampaignManagerApprovalsService) {}
 

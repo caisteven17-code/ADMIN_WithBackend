@@ -27,35 +27,36 @@ export default function Login() {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
-      
       console.log("🔍 Login response status:", response.status);
       console.log("🔍 Login response ok:", response.ok);
-      console.log("🔍 Login response data:", data);
 
-      // IMPORTANT: Check status code first
-      if (response.status !== 200) {
+      // Check if response is JSON
+      const contentType = response.headers.get("content-type");
+      let data: any = {};
+      
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json();
+        console.log("🔍 Login response data:", data);
+      } else {
+        const text = await response.text();
+        console.error("❌ API returned non-JSON:", text.substring(0, 200));
+        setError(`Server error (${response.status}): Invalid response format`);
+        setLoading(false);
+        return;
+      }
+
+      // Handle non-200 responses
+      if (!response.ok) {
         const errorMessage = data.error || data.message || `Login failed (${response.status})`;
-        console.log("❌ Login error (non-200):", errorMessage);
+        console.log("❌ Login error:", errorMessage);
         setError(errorMessage);
         setLoading(false);
         return;
       }
 
-      // Then check success flag
-      if (!data.success) {
-        const errorMessage = data.error || data.message || "Login failed";
-        console.log("❌ Login error (success=false):", errorMessage);
-        setError(errorMessage);
-        setLoading(false);
-        return;
-      }
-
-      // OTP ENABLED: Store email and redirect to OTP verification page
+      // Success branch
       console.log("✅ Login successful, redirecting to OTP");
       localStorage.setItem("pending_email", email);
-      
-      // Redirect to OTP verification page
       router.push(`/verify?email=${encodeURIComponent(email)}`);
     } catch (err) {
       setError("An error occurred during login");

@@ -13,7 +13,7 @@ import {
 import { BeneficiariesService } from './beneficiaries.service';
 import { Protected } from '@shared/protected.decorator';
 
-@Controller('api/beneficiaries')
+@Controller('beneficiaries')
 export class BeneficiariesController {
   constructor(private beneficiariesService: BeneficiariesService) {}
 

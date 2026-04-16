@@ -2,7 +2,7 @@ import { Controller, Get, Post, Param, Body, Query } from '@nestjs/common';
 import { DigitalDonorApprovalsService } from './digital-donor-approvals.service';
 import { Protected } from '@shared/protected.decorator';
 
-@Controller('api/approvals/digital-donors')
+@Controller('approvals/digital-donors')
 export class DigitalDonorApprovalsController {
   constructor(private readonly approvalsService: DigitalDonorApprovalsService) {}
 
