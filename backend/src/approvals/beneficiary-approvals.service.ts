@@ -11,6 +11,14 @@ export interface BeneficiaryApproval {
   address: string;
   status: string;
   created_at: string;
+  documents_submitted?: boolean;
+  bank_details_submitted?: boolean;
+  campaign?: string;
+  allocated_amount?: number;
+  id_verification_key?: string;
+  bank_name?: string;
+  account_number?: string;
+  account_name?: string;
   [key: string]: any;
 }
 

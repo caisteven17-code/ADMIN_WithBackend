@@ -1,9 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, XCircle, Image, Building2, CreditCard } from "lucide-react";
+import { CheckCircle2, XCircle, Image, Building2, CreditCard, FileText } from "lucide-react";
 import BaseModal from "../shared/BaseModal";
 import styles from "./ReviewBeneficiaryApprovalModal.module.css";
+
+function getSupabaseImageUrl(filePath: string): string {
+  if (!filePath) return "";
+  
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://hycsbfugiboutvgbvueg.supabase.co";
+  const bucketName = "beneficiary-ids";
+  
+  if (filePath.startsWith("http")) return filePath;
+  
+  return `${supabaseUrl}/storage/v1/object/public/${bucketName}/${filePath}`;
+}
 
 interface ReviewBeneficiaryApprovalModalProps {
   isOpen: boolean;
@@ -25,6 +36,8 @@ export default function ReviewBeneficiaryApprovalModal({
   const [loading, setLoading] = useState(false);
 
   if (!beneficiaryData) return null;
+
+  const idImageUrl = getSupabaseImageUrl(beneficiaryData?.idVerificationKey);
 
   const handleApprove = async () => {
     if (!idVerified || !bankVerified) {
@@ -140,8 +153,24 @@ export default function ReviewBeneficiaryApprovalModal({
             <label className={styles.label}>Government-issued ID</label>
             <div className={styles.documentPreview}>
               <div className={styles.previewBox}>
-                <Image size={32} />
-                <span>ID Document Preview</span>
+                {idImageUrl ? (
+                  <div className={styles.imageScrollContainer}>
+                    <img 
+                      src={idImageUrl} 
+                      alt="ID Document"
+                      className={styles.documentImage}
+                      onError={(e) => {
+                        console.error('Failed to load image:', idImageUrl);
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className={styles.placeholderContent}>
+                    <Image size={32} />
+                    <span>ID Document Preview</span>
+                  </div>
+                )}
               </div>
             </div>
             <label className={styles.checkbox}>
@@ -164,15 +193,15 @@ export default function ReviewBeneficiaryApprovalModal({
           <div className={styles.bankDetails}>
             <div className={styles.bankField}>
               <label className={styles.label}>Account Name</label>
-              <div className={styles.bankValue}>{beneficiaryData.name}</div>
+              <div className={styles.bankValue}>{beneficiaryData.accountName || beneficiaryData.name}</div>
             </div>
             <div className={styles.bankField}>
               <label className={styles.label}>Bank</label>
-              <div className={styles.bankValue}>BDO Unibank</div>
+              <div className={styles.bankValue}>{beneficiaryData.bankName || 'N/A'}</div>
             </div>
             <div className={styles.bankField}>
               <label className={styles.label}>Account Number</label>
-              <div className={styles.bankValue}>1234567890</div>
+              <div className={styles.bankValue}>{beneficiaryData.accountNumber || 'N/A'}</div>
             </div>
           </div>
 <label className={styles.checkbox}>

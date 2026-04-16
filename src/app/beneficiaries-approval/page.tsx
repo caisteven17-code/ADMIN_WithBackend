@@ -29,13 +29,17 @@ export default function BeneficiariesApproval() {
         // Map backend data to frontend format
         const formattedData = result.data.map((b: any) => ({
           id: b.id,
-          name: `${b.first_name} ${b.last_name}`,
+          name: `${b.first_name || ''} ${b.last_name || ''}`.trim() || 'N/A',
           campaign: b.campaign || 'General Aid',
-          email: b.email,
+          email: b.email || 'N/A',
           date: b.created_at?.split('T')[0] || '',
-          docs: b.documents_submitted || false,
-          bank: b.bank_details_submitted || false,
-          status: 'Pending',
+          docs: !!b.documents_submitted,
+          bank: !!b.bank_details_submitted,
+          idVerificationKey: b.id_verification_key,
+          bankName: b.bank_name,
+          accountNumber: b.account_number,
+          accountName: b.account_name,
+          status: b.status ? (b.status.charAt(0).toUpperCase() + b.status.slice(1)) : 'Pending',
         }));
 
         setApprovals(formattedData);

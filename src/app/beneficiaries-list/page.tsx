@@ -35,9 +35,9 @@ export default function BeneficiariesList() {
           id: b.id,
           campaignManager: b.campaign_manager_name || 'N/A',
           campaign: b.campaign || 'General Aid',
-          name: `${b.first_name} ${b.last_name}`,
-          amount: `₱${b.allocated_amount || 0}`,
-          status: b.verification_status === 'verified' ? 'Approved' : 'Pending',
+          name: `${b.first_name || ''} ${b.last_name || ''}`.trim() || 'N/A',
+          amount: typeof b.allocated_amount === 'number' ? `₱${b.allocated_amount.toLocaleString()}` : (b.allocated_amount ? `₱${b.allocated_amount}` : '₱0'),
+          status: b.status ? (b.status.charAt(0).toUpperCase() + b.status.slice(1)) : (b.verification_status === 'verified' ? 'Approved' : 'Pending'),
         }));
         
         setList(formattedData);
