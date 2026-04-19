@@ -45,7 +45,7 @@ export async function getBackendUrlServer(): Promise<string> {
   }
 
   // Final fallback
-  const defaultUrl = "http://localhost:5000";
+  const defaultUrl = "http://127.0.0.1:5000";
   if (DEBUG) {
     console.log(`[Backend Discovery] Using default: ${defaultUrl}`);
   }

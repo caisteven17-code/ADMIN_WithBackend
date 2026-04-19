@@ -98,7 +98,7 @@ function writeBackendInfo(port: number): void {
     const backendInfoPath = path.resolve(__dirname, '../../../../public/backend-info.json');
     const backendInfo = {
       port,
-      url: `http://localhost:${port}`,
+      url: `http://127.0.0.1:${port}`,
       timestamp: new Date().toISOString(),
     };
     
