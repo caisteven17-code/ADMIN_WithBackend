@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image"; // Import Image component
 import { usePathname } from "next/navigation";
-import { LayoutGrid, User, Users, UserCheck, Heart, ChevronLeft, ChevronRight } from "lucide-react";
+import { LayoutGrid, User, Users, UserCheck, Heart, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import styles from "./Sidebar.module.css";
 
 const navItems = [
@@ -58,9 +58,9 @@ export default function Sidebar() {
         <button 
           className={`${styles.collapseBtn} ${isCollapsed ? styles.collapseBtnCenter : ""}`}
           onClick={() => setIsCollapsed(!isCollapsed)}
+          title={isCollapsed ? "Expand" : "Collapse"}
         >
-          {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
-          {!isCollapsed && <span>Collapse</span>}
+          {isCollapsed ? <PanelLeftOpen size={24} /> : <PanelLeftClose size={24} />}
         </button>
       </div>
     </aside>

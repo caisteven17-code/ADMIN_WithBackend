@@ -31,6 +31,9 @@ export default function DigitalDonors() {
   const [donors, setDonors] = useState(initialDonors);
   const [selectedDonor, setSelectedDonor] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [filter, setFilter] = useState("All");
+
+  const filteredDonors = donors.filter(d => filter === "All" || d.status === filter);
  
   const handleReview = (donor: any) => {
     setSelectedDonor(donor);
@@ -48,6 +51,20 @@ export default function DigitalDonors() {
         <p>Review and approve digital donor registrations</p>
       </header>
       
+      <div className={styles.controlsContainer}>
+        <div className={styles.tabsContainer}>
+          {['All', 'Approved', 'Rejected', 'Pending'].map((status) => (
+            <button
+              key={status}
+              className={`${styles.tab} ${filter === status ? styles.tabActive : ''}`}
+              onClick={() => setFilter(status)}
+            >
+              {status === 'All' ? 'All Registrations' : status}
+            </button>
+          ))}
+        </div>
+      </div>
+      
       <div className={styles.tableContainer}>
         <table className={styles.dataTable}>
           <thead>
@@ -62,7 +79,7 @@ export default function DigitalDonors() {
             </tr>
           </thead>
           <tbody>
-            {donors.map((donor) => (
+            {filteredDonors.map((donor) => (
               <tr key={donor.id}>
                 <td className={styles.textDark}>{donor.name}</td>
                 <td className={styles.textRed}>{donor.email}</td>

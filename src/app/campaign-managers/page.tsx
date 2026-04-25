@@ -16,6 +16,9 @@ export default function CampaignManagers() {
   const [managers, setManagers] = useState(initialManagers);
   const [selectedManager, setSelectedManager] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [filter, setFilter] = useState("All");
+
+  const filteredManagers = managers.filter(m => filter === "All" || m.status === filter);
 
   const handleReview = (manager: any) => {
     setSelectedManager(manager);
@@ -32,6 +35,20 @@ export default function CampaignManagers() {
         <h1>Campaign Managers</h1>
         <p>Review and approve campaign manager applications</p>
       </header>
+
+      <div className={styles.controlsContainer}>
+        <div className={styles.tabsContainer}>
+          {['All', 'Approved', 'Rejected', 'Pending'].map((status) => (
+            <button
+              key={status}
+              className={`${styles.tab} ${filter === status ? styles.tabActive : ''}`}
+              onClick={() => setFilter(status)}
+            >
+              {status === 'All' ? 'All Registrations' : status}
+            </button>
+          ))}
+        </div>
+      </div>
       <div className={styles.tableContainer}>
         <table className={styles.dataTable}>
           <thead>
@@ -46,7 +63,7 @@ export default function CampaignManagers() {
             </tr>
           </thead>
           <tbody>
-            {managers.map((manager) => (
+            {filteredManagers.map((manager) => (
               <tr key={manager.id}>
                 <td className={styles.textDark}>{manager.name}</td>
                 <td className={styles.textRed}>{manager.org}</td>

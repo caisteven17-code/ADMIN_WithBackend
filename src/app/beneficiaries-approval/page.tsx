@@ -16,6 +16,9 @@ export default function BeneficiariesApproval() {
   const [approvals, setApprovals] = useState(initialApprovals);
   const [selectedBeneficiary, setSelectedBeneficiary] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [filter, setFilter] = useState("All");
+
+  const filteredApprovals = approvals.filter(a => filter === "All" || a.status === filter);
 
   const handleReview = (item: any) => {
     setSelectedBeneficiary(item);
@@ -32,7 +35,20 @@ export default function BeneficiariesApproval() {
         <h1>Beneficiaries Approval</h1>
         <p>Review and approve beneficiary applications</p>
       </header>
-      
+
+      <div className={styles.controlsContainer}>
+        <div className={styles.tabsContainer}>
+          {['All', 'Approved', 'Rejected', 'Pending'].map((status) => (
+            <button
+              key={status}
+              className={`${styles.tab} ${filter === status ? styles.tabActive : ''}`}
+              onClick={() => setFilter(status)}
+            >
+              {status === 'All' ? 'All Registrations' : status}
+            </button>
+          ))}
+        </div>
+      </div>
       <div className={styles.tableContainer}>
         <table className={styles.dataTable}>
           <thead>
@@ -48,7 +64,7 @@ export default function BeneficiariesApproval() {
             </tr>
           </thead>
           <tbody>
-            {approvals.map((item) => (
+            {filteredApprovals.map((item) => (
               <tr key={item.id}>
                 <td className={styles.textDark}>{item.name}</td>
                 <td className={styles.textRed}>{item.campaign}</td>
