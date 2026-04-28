@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(claude mcp *)",
-      "mcp__supabase__list_tables"
+      "mcp__supabase__list_tables",
+      "Bash(git merge *)",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
     ]
   }
 }

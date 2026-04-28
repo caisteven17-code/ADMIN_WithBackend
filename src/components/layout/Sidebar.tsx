@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image"; // Import Image component
 import { usePathname } from "next/navigation";
-import { LayoutGrid, User, Users, UserCheck, Heart, PanelLeftClose, PanelLeftOpen, FileText } from "lucide-react";
+import { LayoutGrid, User, Users, UserCheck, Heart, PanelLeftClose, PanelLeftOpen, FileText, Landmark } from "lucide-react";
 import styles from "./Sidebar.module.css";
 
 const navItems = [
@@ -13,6 +13,7 @@ const navItems = [
   { name: "Campaign Manager Approval", href: "/campaign-managers", icon: Users },
   { name: "Beneficiaries Approval", href: "/beneficiaries-approval", icon: UserCheck },
   { name: "Beneficiary Documents Approval", href: "/beneficiary-documents-approval", icon: FileText },
+  { name: "Beneficiary Bank Approval", href: "/beneficiary-bank-approval", icon: Landmark },
   { name: "Campaign List", href: "/beneficiaries-list", icon: Heart },
 ];
 

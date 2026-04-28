@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, XCircle, Image, Building2, CreditCard, FileText } from "lucide-react";
+import { CheckCircle2, XCircle, Image } from "lucide-react";
 import BaseModal from "../shared/BaseModal";
 import styles from "./ReviewBeneficiaryApprovalModal.module.css";
 
@@ -30,7 +30,6 @@ export default function ReviewBeneficiaryApprovalModal({
   onUpdate
 }: ReviewBeneficiaryApprovalModalProps) {
   const [idVerified, setIdVerified] = useState(false);
-  const [bankVerified, setBankVerified] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -40,8 +39,8 @@ export default function ReviewBeneficiaryApprovalModal({
   const idImageUrl = getSupabaseImageUrl(beneficiaryData?.idVerificationKey);
 
   const handleApprove = async () => {
-    if (!idVerified || !bankVerified) {
-      alert("Please verify both Identity Document and Bank Account Details before approving");
+    if (!idVerified) {
+      alert("Please verify the Identity Document before approving");
       return;
     }
 
@@ -185,36 +184,6 @@ export default function ReviewBeneficiaryApprovalModal({
               </div>
             </label>
           </div>
-        </div>
-
-        <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>Bank Account Details</h3>
-          
-          <div className={styles.bankDetails}>
-            <div className={styles.bankField}>
-              <label className={styles.label}>Account Name</label>
-              <div className={styles.bankValue}>{beneficiaryData.accountName || beneficiaryData.name}</div>
-            </div>
-            <div className={styles.bankField}>
-              <label className={styles.label}>Bank</label>
-              <div className={styles.bankValue}>{beneficiaryData.bankName || 'N/A'}</div>
-            </div>
-            <div className={styles.bankField}>
-              <label className={styles.label}>Account Number</label>
-              <div className={styles.bankValue}>{beneficiaryData.accountNumber || 'N/A'}</div>
-            </div>
-          </div>
-<label className={styles.checkbox}>
-              <input 
-                type="checkbox" 
-                checked={bankVerified}
-                onChange={(e) => setBankVerified(e.target.checked)}
-              />
-              <span>I have verified this bank account details are valid</span>
-              <div className={styles.statusIcon}>
-                {bankVerified ? <CheckCircle2 size={18} color="#22c55e" /> : <XCircle size={18} color="#ef4444" />}
-              </div>
-            </label>
         </div>
 
         {showRejectForm && (

@@ -2,17 +2,17 @@
 
 import { useState } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
-import ReviewBeneficiaryApprovalModal from "@/components/layout/modals/BeneficiaryApproval/ReviewBeneficiaryApprovalModal";
+import ReviewBeneficiaryBankModal from "@/components/layout/modals/BeneficiaryBankApproval/ReviewBeneficiaryBankModal";
 import styles from "../tableStyles.module.css";
 
 const initialApprovals = [
-  { id: 1, name: "Ana Reyes", campaign: "Medical Assistance", email: "ana@email.com", date: "2026-03-30", docs: false, status: "Pending" },
-  { id: 2, name: "Carlos Santos", campaign: "Education Fund", email: "carlos@email.com", date: "2026-03-29", docs: false, status: "Pending" },
-  { id: 3, name: "Elena Cruz", campaign: "Disaster Relief", email: "elena@email.com", date: "2026-03-28", docs: false, status: "Pending" },
-  { id: 4, name: "Miguel Torres", campaign: "Food Security", email: "miguel@email.com", date: "2026-03-27", docs: true, status: "Approved" },
+  { id: 1, name: "Ana Reyes", email: "ana@email.com", date: "2026-03-30", bank: false, accountName: "Ana Reyes", bankName: "BDO", accountNumber: "1234567890", status: "Pending" },
+  { id: 2, name: "Carlos Santos", email: "carlos@email.com", date: "2026-03-29", bank: false, accountName: "Carlos Santos", bankName: "BPI", accountNumber: "0987654321", status: "Pending" },
+  { id: 3, name: "Elena Cruz", email: "elena@email.com", date: "2026-03-28", bank: false, accountName: "Elena Cruz", bankName: "Metrobank", accountNumber: "1122334455", status: "Pending" },
+  { id: 4, name: "Miguel Torres", email: "miguel@email.com", date: "2026-03-27", bank: true, accountName: "Miguel Torres", bankName: "UnionBank", accountNumber: "5566778899", status: "Approved" },
 ];
 
-export default function BeneficiaryDocumentsApproval() {
+export default function BeneficiaryBankApproval() {
   const [approvals, setApprovals] = useState(initialApprovals);
   const [selectedBeneficiary, setSelectedBeneficiary] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -32,8 +32,8 @@ export default function BeneficiaryDocumentsApproval() {
   return (
     <div className={styles.pageContainer}>
       <header className={styles.header}>
-        <h1>Beneficiary Documents Approval</h1>
-        <p>Review and approve beneficiary identity documents</p>
+        <h1>Beneficiary Bank Approval</h1>
+        <p>Review and approve beneficiary bank account details</p>
       </header>
 
       <div className={styles.controlsContainer}>
@@ -44,7 +44,7 @@ export default function BeneficiaryDocumentsApproval() {
               className={`${styles.tab} ${filter === status ? styles.tabActive : ''}`}
               onClick={() => setFilter(status)}
             >
-              {status === 'All' ? 'All Documents' : status}
+              {status === 'All' ? 'All Registrations' : status}
             </button>
           ))}
         </div>
@@ -55,10 +55,9 @@ export default function BeneficiaryDocumentsApproval() {
           <thead>
             <tr>
               <th>Name</th>
-              <th>Campaign</th>
               <th>Email</th>
               <th>Date Submitted</th>
-              <th>Documents</th>
+              <th>Bank Details</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -67,10 +66,9 @@ export default function BeneficiaryDocumentsApproval() {
             {filteredApprovals.map((item) => (
               <tr key={item.id}>
                 <td className={styles.textDark}>{item.name}</td>
-                <td className={styles.textRed}>{item.campaign}</td>
                 <td className={styles.textRed}>{item.email}</td>
                 <td>{item.date}</td>
-                <td>{item.docs ? <CheckCircle2 color="#22c55e" size={20} /> : <XCircle color="#ef4444" size={20} />}</td>
+                <td>{item.bank ? <CheckCircle2 color="#22c55e" size={20} /> : <XCircle color="#ef4444" size={20} />}</td>
                 <td><span className={`${styles.badge} ${styles[`badge${item.status}`]}`}>{item.status}</span></td>
                 <td>
                   {item.status === "Pending" && (
@@ -88,7 +86,7 @@ export default function BeneficiaryDocumentsApproval() {
         </table>
       </div>
 
-      <ReviewBeneficiaryApprovalModal
+      <ReviewBeneficiaryBankModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         beneficiaryData={selectedBeneficiary}
