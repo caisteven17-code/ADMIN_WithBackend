@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image"; // Import Image component
 import { usePathname } from "next/navigation";
-import { LayoutGrid, User, Users, UserCheck, Heart, ChevronLeft, ChevronRight } from "lucide-react";
+import { LayoutGrid, User, Users, UserCheck, Heart, PanelLeftClose, PanelLeftOpen, FileText } from "lucide-react";
 import styles from "./Sidebar.module.css";
 
 const navItems = [
@@ -12,6 +12,7 @@ const navItems = [
   { name: "Digital Donor Approval", href: "/digital-donors", icon: User },
   { name: "Campaign Manager Approval", href: "/campaign-managers", icon: Users },
   { name: "Beneficiaries Approval", href: "/beneficiaries-approval", icon: UserCheck },
+  { name: "Beneficiary Documents Approval", href: "/beneficiary-documents-approval", icon: FileText },
   { name: "Campaign List", href: "/beneficiaries-list", icon: Heart },
 ];
 
@@ -59,8 +60,7 @@ export default function Sidebar() {
           className={`${styles.collapseBtn} ${isCollapsed ? styles.collapseBtnCenter : ""}`}
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
-          {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
-          {!isCollapsed && <span>Collapse</span>}
+          {isCollapsed ? <PanelLeftOpen size={24} /> : <PanelLeftClose size={24} />}
         </button>
       </div>
     </aside>
