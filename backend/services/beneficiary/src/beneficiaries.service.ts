@@ -42,6 +42,7 @@ export class BeneficiariesService {
       }
 
       // Fetch manager names
+      // 2. Get all manager profiles for these campaigns
       const managerIds = [...new Set(data?.map(c => c.created_by).filter(id => id))];
       let managersMap: Record<string, string> = {};
       
@@ -51,28 +52,70 @@ export class BeneficiariesService {
           .select('id, first_name, last_name, full_name, organization_name')
           .in('id', managerIds);
           
-        if (managers) {
-          managersMap = managers.reduce((acc, m) => {
-            const name = (m.first_name ? `${m.first_name} ${m.last_name || ''}`.trim() : m.full_name);
-            acc[m.id] = name || m.organization_name || 'Unknown Manager';
+        managersMap = (managers || []).reduce((acc, m) => {
+          const name = (m.first_name ? `${m.first_name} ${m.last_name || ''}`.trim() : m.full_name);
+          acc[m.id] = name || m.organization_name || 'Unknown Manager';
+          return acc;
+        }, {} as Record<string, string>);
+      }
+
+      // 3. Get all linked beneficiaries via campaign_beneficiaries junction table
+      const campaignIds = data?.map(c => c.id) || [];
+      let beneficiariesMap: Record<string, { name: string, id: string }> = {};
+
+      if (campaignIds.length > 0) {
+        // Fetch junction data
+        const { data: junctionData } = await supabase
+          .from('campaign_beneficiaries')
+          .select('campaign_id, beneficiary_profile_id')
+          .in('campaign_id', campaignIds);
+
+        const beneficiaryProfileIds = [...new Set(junctionData?.map(j => j.beneficiary_profile_id).filter(id => id))];
+
+        if (beneficiaryProfileIds.length > 0) {
+          // Fetch actual profile names
+          const { data: profiles } = await supabase
+            .from('beneficiary_profiles')
+            .select('id, first_name, last_name')
+            .in('id', beneficiaryProfileIds);
+
+          const profilesMap = (profiles || []).reduce((acc, p) => {
+            acc[p.id] = `${p.first_name || ''} ${p.last_name || ''}`.trim() || 'Unknown Beneficiary';
             return acc;
           }, {} as Record<string, string>);
+
+          // Map back to campaign ID
+          beneficiariesMap = (junctionData || []).reduce((acc, j) => {
+            if (j.campaign_id && j.beneficiary_profile_id) {
+              acc[j.campaign_id] = {
+                name: profilesMap[j.beneficiary_profile_id] || 'Unknown Beneficiary',
+                id: j.beneficiary_profile_id
+              };
+            }
+            return acc;
+          }, {} as Record<string, { name: string, id: string }>);
         }
       }
 
-      const formattedData = (data || []).map(campaign => ({
-        id: campaign.id,
-        first_name: campaign.title, // Maps to 'Beneficiary' column on frontend
-        last_name: '',              // Combined with first_name
-        campaign: campaign.title,   // Maps to 'Campaign Name' column
-        campaign_manager_name: campaign.created_by ? managersMap[campaign.created_by] || 'Unknown Manager' : 'Unknown Manager',
-        allocated_amount: campaign.collected_amount, // Maps to 'Amount Allocated'
-        status: campaign.status,
-        verification_status: campaign.status, // Fallback for frontend
-        created_at: campaign.created_at,
-      }));
+      // 4. Format the final data
+      const formattedData = (data || []).map(campaign => {
+        const beneficiaryInfo = beneficiariesMap[campaign.id];
+        
+        return {
+          id: campaign.id, // Use campaign ID to ensure row uniqueness in the table
+          beneficiary_id: beneficiaryInfo?.id, // Keep beneficiary ID for details routing
+          first_name: beneficiaryInfo?.name || 'No Beneficiary Linked',
+          last_name: '', // Combined in first_name
+          campaign: campaign.title,
+          campaign_manager_name: campaign.created_by ? managersMap[campaign.created_by] || 'Unknown Manager' : 'Unknown Manager',
+          allocated_amount: campaign.collected_amount,
+          status: this.mapCampaignStatusToBeneficiaryStatus(campaign.status),
+          created_at: campaign.created_at,
+        };
+      });
 
-      console.log(`✅ Retrieved ${data?.length || 0} campaigns masquerading as beneficiaries from ${count || 0} total`);
+      console.log(`✅ Retrieved ${formattedData.length} campaigns with resolved names`);
+
       return {
         data: formattedData as unknown as Beneficiary[],
         total: count || 0,
@@ -81,8 +124,21 @@ export class BeneficiariesService {
       };
     } catch (error) {
       console.error('❌ Exception in getAllBeneficiaries:', error);
-      throw error;
+      return { data: [], total: 0, page, limit };
     }
+  }
+
+  /**
+   * Helper to map campaign status to beneficiary status expected by frontend
+   */
+  private mapCampaignStatusToBeneficiaryStatus(status: string): string {
+    const statusMap: Record<string, string> = {
+      'active': 'Active',
+      'completed': 'Sent',
+      'pending': 'Pending',
+      'cancelled': 'Rejected'
+    };
+    return statusMap[status.toLowerCase()] || status;
   }
 
   async getBeneficiaryById(id: string): Promise<Beneficiary> {

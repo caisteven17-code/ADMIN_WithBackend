@@ -9,8 +9,8 @@ import styles from "./Sidebar.module.css";
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutGrid },
-  { name: "Digital Donors", href: "/digital-donors", icon: User },
-  { name: "Campaign Managers", href: "/campaign-managers", icon: Users },
+  { name: "Digital Donor Approval", href: "/digital-donors", icon: User },
+  { name: "Campaign Manager Approval", href: "/campaign-managers", icon: Users },
   { name: "Beneficiaries Approval", href: "/beneficiaries-approval", icon: UserCheck },
   { name: "Campaign List", href: "/beneficiaries-list", icon: Heart },
 ];

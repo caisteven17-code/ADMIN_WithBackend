@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     }
 
     const BACKEND_URL = await getBackendUrl();
-    const url = `${BACKEND_URL}/api/approvals/campaign-managers/pending?page=${page}&limit=${limit}`;
+    const url = `${BACKEND_URL}/api/approvals/campaign-managers?page=${page}&limit=${limit}`;
     console.log(`📡 Fetching campaign managers: ${url}`);
 
     const response = await fetch(url, {
