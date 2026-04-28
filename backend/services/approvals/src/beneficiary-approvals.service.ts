@@ -19,26 +19,24 @@ export class BeneficiaryApprovalsService {
   constructor(private readonly activityService: ActivityLogger) {}
 
   /**
-   * Get all pending beneficiary approvals from beneficiary_profiles table
+   * Get all beneficiary approvals from beneficiary_profiles table
    */
-  async getPendingApprovals(
+  async getAllApprovals(
     page: number = 1,
     limit: number = 10,
   ): Promise<{ data: BeneficiaryApproval[]; total: number; page: number; limit: number }> {
     try {
       const offset = (page - 1) * limit;
 
-      // Get total count of pending
+      // Get total count (all statuses)
       const { count } = await supabase
         .from('beneficiary_profiles')
-        .select('*', { count: 'exact' })
-        .eq('status', 'pending');
+        .select('*', { count: 'exact' });
 
-      // Get paginated pending beneficiaries
+      // Get paginated beneficiaries
       const { data, error } = await supabase
         .from('beneficiary_profiles')
         .select('*')
-        .eq('status', 'pending')
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
 

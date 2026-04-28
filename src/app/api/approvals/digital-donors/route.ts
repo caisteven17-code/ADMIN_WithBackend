@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     }
 
     const BACKEND_URL = await getBackendUrl();
-    const url = `${BACKEND_URL}/api/approvals/digital-donors/pending?page=${page}&limit=${limit}`;
+    const url = `${BACKEND_URL}/api/approvals/digital-donors?page=${page}&limit=${limit}`;
     console.log(`📡 Fetching digital donors: ${url}`);
 
     const response = await fetch(url, {

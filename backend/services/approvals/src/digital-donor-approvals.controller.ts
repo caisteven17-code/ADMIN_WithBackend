@@ -7,18 +7,18 @@ export class DigitalDonorApprovalsController {
   constructor(private readonly approvalsService: DigitalDonorApprovalsService) {}
 
   /**
-   * GET /api/approvals/digital-donors/pending
-   * Get all pending digital donor approvals with pagination
+   * GET /api/approvals/digital-donors
+   * Get all digital donor approvals with pagination
    */
-  @Get('pending')
+  @Get()
   @Protected()
-  async getPendingApprovals(
+  async getAllApprovals(
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
   ) {
     const pageNum = Math.max(1, parseInt(page) || 1);
     const limitNum = Math.min(100, parseInt(limit) || 10);
-    const result = await this.approvalsService.getPendingApprovals(pageNum, limitNum);
+    const result = await this.approvalsService.getAllApprovals(pageNum, limitNum);
     return {
       success: true,
       data: result.data,

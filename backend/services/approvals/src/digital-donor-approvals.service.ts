@@ -18,40 +18,38 @@ export class DigitalDonorApprovalsService {
   constructor(private readonly activityService: ActivityLogger) {}
 
   /**
-   * Get all pending digital donor approvals from digital_donor_profiles table
+   * Get all digital donor approvals from digital_donor_profiles table
    */
-  async getPendingApprovals(
+  async getAllApprovals(
     page: number = 1,
     limit: number = 10,
   ): Promise<{ data: DigitalDonorApproval[]; total: number; page: number; limit: number }> {
     try {
       const offset = (page - 1) * limit;
 
-      // Get total count - only check status column
+      // Get total count
       const { count, error: countError } = await supabase
         .from('digital_donor_profiles')
-        .select('*', { count: 'exact' })
-        .eq('status', 'pending');
+        .select('*', { count: 'exact' });
 
       if (countError) {
         console.error('❌ Supabase error fetching count:', countError);
       }
-      console.log('📊 Total pending count:', count);
+      console.log('📊 Total donor count:', count);
 
-      // Get paginated pending digital donors
+      // Get paginated digital donors
       const { data, error } = await supabase
         .from('digital_donor_profiles')
         .select('*')
-        .eq('status', 'pending')
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
 
       if (error) {
-        console.error('❌ Supabase error fetching pending approvals:', error);
+        console.error('❌ Supabase error fetching approvals:', error);
         return { data: [], total: 0, page, limit };
       }
 
-      console.log('✅ Fetched pending digital donor approvals:', data?.length || 0);
+      console.log('✅ Fetched digital donor approvals:', data?.length || 0);
       console.log('📋 Data sample:', data?.[0]);
       
       // Log all donors to check auth_user_id

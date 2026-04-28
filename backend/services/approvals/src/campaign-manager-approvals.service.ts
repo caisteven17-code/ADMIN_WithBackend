@@ -18,26 +18,24 @@ export class CampaignManagerApprovalsService {
   constructor(private readonly activityService: ActivityLogger) {}
 
   /**
-   * Get all pending campaign manager approvals from campaign_manager_profiles table
+   * Get all campaign manager approvals from campaign_manager_profiles table
    */
-  async getPendingApprovals(
+  async getAllApprovals(
     page: number = 1,
     limit: number = 10,
   ): Promise<{ data: CampaignManagerApproval[]; total: number; page: number; limit: number }> {
     try {
       const offset = (page - 1) * limit;
 
-      // Get total count of pending
+      // Get total count
       const { count } = await supabase
         .from('campaign_manager_profiles')
-        .select('*', { count: 'exact' })
-        .eq('status', 'pending');
+        .select('*', { count: 'exact' });
 
-      // Get paginated pending campaign managers
+      // Get paginated campaign managers
       const { data, error } = await supabase
         .from('campaign_manager_profiles')
         .select('*')
-        .eq('status', 'pending')
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
 
