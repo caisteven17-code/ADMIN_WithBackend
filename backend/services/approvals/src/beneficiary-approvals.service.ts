@@ -292,4 +292,324 @@ export class BeneficiaryApprovalsService {
       return { success: false, message: 'Error processing donation' };
     }
   }
+
+  /**
+   * Approve a beneficiary's documents
+   */
+  async approveDocument(
+    beneficiaryId: string,
+    adminId: string,
+    adminEmail?: string,
+  ): Promise<{ success: boolean; message: string; data?: any }> {
+    try {
+      // Get name for logging
+      const { data: beneficiaryData } = await supabase
+        .from('beneficiary_profiles')
+        .select('first_name, last_name')
+        .eq('id', beneficiaryId)
+        .single();
+
+      const { data, error } = await supabase
+        .from('beneficiary_identity_documents')
+        .update({
+          status: 'approved',
+          reviewed_by: adminId,
+          reviewed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('beneficiary_profile_id', beneficiaryId)
+        .select();
+
+      if (error) {
+        console.error('Supabase error approving beneficiary document:', error);
+        return { success: false, message: 'Failed to approve beneficiary documents' };
+      }
+
+      await this.activityService.logActivity({
+        admin_id: adminId,
+        admin_email: adminEmail || 'admin@hopecard.com',
+        action: 'APPROVED_DOCUMENTS',
+        description: `Approved documents for beneficiary: ${beneficiaryData?.first_name} ${beneficiaryData?.last_name}`,
+        resource_type: 'beneficiary_document',
+        resource_id: beneficiaryId,
+      });
+
+      console.log('✅ Beneficiary documents approved in beneficiary_identity_documents:', beneficiaryId);
+      return {
+        success: true,
+        message: 'Beneficiary documents approved successfully',
+        data: data?.[0],
+      };
+    } catch (error) {
+      console.error('Error approving beneficiary documents:', error);
+      return { success: false, message: 'Error approving beneficiary documents' };
+    }
+  }
+
+  /**
+   * Reject a beneficiary's documents
+   */
+  async rejectDocument(
+    beneficiaryId: string,
+    adminId: string,
+    reason?: string,
+    adminEmail?: string,
+  ): Promise<{ success: boolean; message: string; data?: any }> {
+    try {
+      // Get name for logging
+      const { data: beneficiaryData } = await supabase
+        .from('beneficiary_profiles')
+        .select('first_name, last_name')
+        .eq('id', beneficiaryId)
+        .single();
+
+      const { data, error } = await supabase
+        .from('beneficiary_identity_documents')
+        .update({
+          status: 'rejected',
+          rejection_reason: reason || null,
+          reviewed_by: adminId,
+          reviewed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('beneficiary_profile_id', beneficiaryId)
+        .select();
+
+      if (error) {
+        console.error('Supabase error rejecting beneficiary documents:', error);
+        return { success: false, message: 'Failed to reject beneficiary documents' };
+      }
+
+      await this.activityService.logActivity({
+        admin_id: adminId,
+        admin_email: adminEmail || 'admin@hopecard.com',
+        action: 'REJECTED_DOCUMENTS',
+        description: `Rejected documents for beneficiary: ${beneficiaryData?.first_name} ${beneficiaryData?.last_name}${reason ? ` - Reason: ${reason}` : ''}`,
+        resource_type: 'beneficiary_document',
+        resource_id: beneficiaryId,
+      });
+
+      console.log('✅ Beneficiary documents rejected in beneficiary_identity_documents:', beneficiaryId);
+      return {
+        success: true,
+        message: 'Beneficiary documents rejected successfully',
+        data: data?.[0],
+      };
+    } catch (error) {
+      console.error('Error rejecting beneficiary documents:', error);
+      return { success: false, message: 'Error rejecting beneficiary documents' };
+    }
+  }
+
+  /**
+   * Approve a beneficiary's bank details
+   */
+  async approveBank(
+    beneficiaryId: string,
+    adminId: string,
+    adminEmail?: string,
+  ): Promise<{ success: boolean; message: string; data?: any }> {
+    try {
+      // Get name for logging
+      const { data: beneficiaryData } = await supabase
+        .from('beneficiary_profiles')
+        .select('first_name, last_name')
+        .eq('id', beneficiaryId)
+        .single();
+
+      const { data, error } = await supabase
+        .from('beneficiary_bank_accounts')
+        .update({
+          is_active: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('beneficiary_profile_id', beneficiaryId)
+        .select();
+
+      if (error) {
+        console.error('Supabase error approving beneficiary bank details:', error);
+        return { success: false, message: 'Failed to approve beneficiary bank details' };
+      }
+
+      await this.activityService.logActivity({
+        admin_id: adminId,
+        admin_email: adminEmail || 'admin@hopecard.com',
+        action: 'APPROVED_BANK',
+        description: `Approved bank details for beneficiary: ${beneficiaryData?.first_name} ${beneficiaryData?.last_name}`,
+        resource_type: 'beneficiary_bank',
+        resource_id: beneficiaryId,
+      });
+
+      console.log('✅ Beneficiary bank details approved in beneficiary_bank_accounts:', beneficiaryId);
+      return {
+        success: true,
+        message: 'Beneficiary bank details approved successfully',
+        data: data?.[0],
+      };
+    } catch (error) {
+      console.error('Error approving beneficiary bank details:', error);
+      return { success: false, message: 'Error approving beneficiary bank details' };
+    }
+  }
+
+  /**
+   * Reject a beneficiary's bank details
+   */
+  async rejectBank(
+    beneficiaryId: string,
+    adminId: string,
+    reason?: string,
+    adminEmail?: string,
+  ): Promise<{ success: boolean; message: string; data?: any }> {
+    try {
+      // Get name for logging
+      const { data: beneficiaryData } = await supabase
+        .from('beneficiary_profiles')
+        .select('first_name, last_name')
+        .eq('id', beneficiaryId)
+        .single();
+
+      const { data, error } = await supabase
+        .from('beneficiary_bank_accounts')
+        .update({
+          is_active: false,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('beneficiary_profile_id', beneficiaryId)
+        .select();
+
+      if (error) {
+        console.error('Supabase error rejecting beneficiary bank details:', error);
+        return { success: false, message: 'Failed to reject beneficiary bank details' };
+      }
+
+      await this.activityService.logActivity({
+        admin_id: adminId,
+        admin_email: adminEmail || 'admin@hopecard.com',
+        action: 'REJECTED_BANK',
+        description: `Rejected bank details for beneficiary: ${beneficiaryData?.first_name} ${beneficiaryData?.last_name}${reason ? ` - Reason: ${reason}` : ''}`,
+        resource_type: 'beneficiary_bank',
+        resource_id: beneficiaryId,
+      });
+
+      console.log('✅ Beneficiary bank details rejected in beneficiary_bank_accounts:', beneficiaryId);
+      return {
+        success: true,
+        message: 'Beneficiary bank details rejected successfully',
+        data: data?.[0],
+      };
+    } catch (error) {
+      console.error('Error rejecting beneficiary bank details:', error);
+      return { success: false, message: 'Error rejecting beneficiary bank details' };
+    }
+  }
+
+  /**
+   * Get all identity document approvals
+   */
+  async getDocumentApprovals(
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    try {
+      const offset = (page - 1) * limit;
+
+      const { count } = await supabase
+        .from('beneficiary_identity_documents')
+        .select('*', { count: 'exact', head: true });
+
+      const { data, error } = await supabase
+        .from('beneficiary_identity_documents')
+        .select(`
+          *,
+          beneficiary_profiles (
+            first_name,
+            last_name,
+            email,
+            hc_campaigns (
+              title
+            )
+          )
+        `)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        console.error('Error fetching document approvals:', error);
+        return { data: [], total: 0, page, limit };
+      }
+
+      const formattedData = (data || []).map(doc => {
+        const profile = doc.beneficiary_profiles as any;
+        return {
+          ...doc,
+          beneficiary_name: profile
+            ? `${profile.first_name} ${profile.last_name}`.trim()
+            : 'Unknown Beneficiary',
+          beneficiary_email: profile?.email || 'No Email',
+          campaign_title: profile?.hc_campaigns?.title || 'N/A',
+        };
+      });
+
+      return { data: formattedData, total: count || 0, page, limit };
+    } catch (error) {
+      console.error('Exception in getDocumentApprovals:', error);
+      return { data: [], total: 0, page, limit };
+    }
+  }
+
+  /**
+   * Get all bank account approvals
+   */
+  async getBankApprovals(
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    try {
+      const offset = (page - 1) * limit;
+
+      const { count } = await supabase
+        .from('beneficiary_bank_accounts')
+        .select('*', { count: 'exact', head: true });
+
+      const { data, error } = await supabase
+        .from('beneficiary_bank_accounts')
+        .select(`
+          *,
+          beneficiary_profiles (
+            first_name,
+            last_name,
+            email,
+            hc_campaigns (
+              title
+            )
+          )
+        `)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        console.error('Error fetching bank approvals:', error);
+        return { data: [], total: 0, page, limit };
+      }
+
+      const formattedData = (data || []).map(bank => {
+        const profile = bank.beneficiary_profiles as any;
+        return {
+          ...bank,
+          beneficiary_name: profile
+            ? `${profile.first_name} ${profile.last_name}`.trim()
+            : 'Unknown Beneficiary',
+          beneficiary_email: profile?.email || 'No Email',
+          campaign_title: profile?.hc_campaigns?.title || 'N/A',
+          status: bank.is_active ? 'approved' : 'pending',
+        };
+      });
+
+      return { data: formattedData, total: count || 0, page, limit };
+    } catch (error) {
+      console.error('Exception in getBankApprovals:', error);
+      return { data: [], total: 0, page, limit };
+    }
+  }
 }
