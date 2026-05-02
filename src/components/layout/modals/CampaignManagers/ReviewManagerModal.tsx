@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CheckCircle2, XCircle, FileText, Image, Building2 } from "lucide-react";
 import BaseModal from "../shared/BaseModal";
+import AlertModal from "../shared/AlertModal";
 import styles from "./ReviewManagerModal.module.css";
 
 interface ReviewManagerModalProps {
@@ -18,28 +19,46 @@ export default function ReviewManagerModal({ isOpen, onClose, managerData, onUpd
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectForm, setShowRejectForm] = useState(false);
 
+  // Alert modal state
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertVariant, setAlertVariant] = useState<"warning" | "success" | "error">("warning");
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertCallback, setAlertCallback] = useState<(() => void) | null>(null);
+
   if (!managerData) return null;
+
+  const showAlert = (variant: "warning" | "success" | "error", title: string, message: string, callback?: () => void) => {
+    setAlertVariant(variant);
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertCallback(() => callback || null);
+    setAlertOpen(true);
+  };
+
+  const handleAlertClose = () => {
+    setAlertOpen(false);
+    if (alertCallback) alertCallback();
+  };
 
   const handleApprove = () => {
     if (!secVerified || !certVerified) {
-      alert("Please verify both SEC Registration and Organizational Certificate before approving");
+      showAlert("warning", "Verification Required", "Please verify both SEC Registration and Organizational Certificate before approving.");
       return;
     }
     const updatedManager = { ...managerData, docsVerified: true, status: "Approved" };
     if (onUpdate) onUpdate(updatedManager);
-    alert(`Approved: ${managerData.name}`);
-    onClose();
+    showAlert("success", "Manager Approved", `${managerData.name} has been successfully approved.`, () => onClose());
   };
 
   const handleReject = () => {
     if (!rejectionReason.trim()) {
-      alert("Please provide a rejection reason");
+      showAlert("warning", "Reason Required", "Please provide a rejection reason before proceeding.");
       return;
     }
     const updatedManager = { ...managerData, docsVerified: false, status: "Rejected" };
     if (onUpdate) onUpdate(updatedManager);
-    alert(`Rejected: ${managerData.name}\nReason: ${rejectionReason}`);
-    onClose();
+    showAlert("error", "Manager Rejected", `${managerData.name} has been rejected.\nReason: ${rejectionReason}`, () => onClose());
   };
 
   return (
@@ -147,6 +166,14 @@ export default function ReviewManagerModal({ isOpen, onClose, managerData, onUpd
           )}
         </div>
       </div>
+
+      <AlertModal
+        isOpen={alertOpen}
+        onClose={handleAlertClose}
+        variant={alertVariant}
+        title={alertTitle}
+        message={alertMessage}
+      />
     </BaseModal>
   );
 }

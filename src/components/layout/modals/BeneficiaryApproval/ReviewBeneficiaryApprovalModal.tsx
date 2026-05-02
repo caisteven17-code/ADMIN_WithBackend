@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CheckCircle2, XCircle, Image, Building2, CreditCard } from "lucide-react";
 import BaseModal from "../shared/BaseModal";
+import AlertModal from "../shared/AlertModal";
 import styles from "./ReviewBeneficiaryApprovalModal.module.css";
 
 interface ReviewBeneficiaryApprovalModalProps {
@@ -23,28 +24,46 @@ export default function ReviewBeneficiaryApprovalModal({
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectForm, setShowRejectForm] = useState(false);
 
+  // Alert modal state
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertVariant, setAlertVariant] = useState<"warning" | "success" | "error">("warning");
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertCallback, setAlertCallback] = useState<(() => void) | null>(null);
+
   if (!beneficiaryData) return null;
+
+  const showAlert = (variant: "warning" | "success" | "error", title: string, message: string, callback?: () => void) => {
+    setAlertVariant(variant);
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertCallback(() => callback || null);
+    setAlertOpen(true);
+  };
+
+  const handleAlertClose = () => {
+    setAlertOpen(false);
+    if (alertCallback) alertCallback();
+  };
 
   const handleApprove = () => {
     if (!idVerified || !bankVerified) {
-      alert("Please verify both Identity Document and Bank Account Details before approving");
+      showAlert("warning", "Verification Required", "Please verify both Identity Document and Bank Account Details before approving.");
       return;
     }
     const updatedBeneficiary = { ...beneficiaryData, docs: idVerified, bank: bankVerified, status: "Approved" };
     if (onUpdate) onUpdate(updatedBeneficiary);
-    alert(`Approved: ${beneficiaryData.name}`);
-    onClose();
+    showAlert("success", "Beneficiary Approved", `${beneficiaryData.name} has been successfully approved.`, () => onClose());
   };
 
   const handleReject = () => {
     if (!rejectionReason.trim()) {
-      alert("Please provide a rejection reason");
+      showAlert("warning", "Reason Required", "Please provide a rejection reason before proceeding.");
       return;
     }
     const updatedBeneficiary = { ...beneficiaryData, docs: idVerified, bank: bankVerified, status: "Rejected" };
     if (onUpdate) onUpdate(updatedBeneficiary);
-    alert(`Rejected: ${beneficiaryData.name}\nReason: ${rejectionReason}`);
-    onClose();
+    showAlert("error", "Beneficiary Rejected", `${beneficiaryData.name} has been rejected.\nReason: ${rejectionReason}`, () => onClose());
   };
 
   return (
@@ -114,6 +133,7 @@ export default function ReviewBeneficiaryApprovalModal({
               <div className={styles.bankValue}>1234567890</div>
             </div>
           </div>
+
 <label className={styles.checkbox}>
               <input 
                 type="checkbox" 
@@ -161,6 +181,14 @@ export default function ReviewBeneficiaryApprovalModal({
           )}
         </div>
       </div>
+
+      <AlertModal
+        isOpen={alertOpen}
+        onClose={handleAlertClose}
+        variant={alertVariant}
+        title={alertTitle}
+        message={alertMessage}
+      />
     </BaseModal>
   );
 }

@@ -1,12 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image"; // 1. Import Image
-import { Mail, Lock } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import styles from "./login.module.css";
 
 export default function Login() {
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -59,11 +61,18 @@ export default function Login() {
               <div className={styles.inputWrapper}>
                 <Lock size={18} className={styles.inputIcon} />
                 <input 
-                  type="password" 
+                  type={showPassword ? "text" : "password"} 
                   placeholder="••••••••" 
                   required 
                   className={styles.input}
                 />
+                <button 
+                  type="button" 
+                  className={styles.eyeBtn} 
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                </button>
               </div>
             </div>
 

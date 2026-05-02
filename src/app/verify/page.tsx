@@ -1,15 +1,60 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import styles from "./verify.module.css";
 
+type ResendNotice = {
+  variant: "warning" | "success";
+  message: string;
+};
+
 export default function Verify() {
   const router = useRouter();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [countdown, setCountdown] = useState(59);
+  const [resendNotice, setResendNotice] = useState<ResendNotice | null>(null);
+
+  const canResend = countdown === 0;
+
+  useEffect(() => {
+    if (countdown <= 0) {
+      return;
+    }
+    const interval = setInterval(() => {
+      setCountdown((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [countdown]);
+
+  useEffect(() => {
+    if (!resendNotice) {
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      setResendNotice(null);
+    }, 2800);
+
+    return () => clearTimeout(timeout);
+  }, [resendNotice]);
+
+  const showResendNotice = useCallback((variant: "warning" | "success", message: string) => {
+    setResendNotice({ variant, message });
+  }, []);
+
+  const handleResend = useCallback(() => {
+    if (!canResend) {
+      showResendNotice("warning", `Wait 0:${countdown.toString().padStart(2, "0")} before resending.`);
+      return;
+    }
+
+    setCountdown(59);
+    showResendNotice("success", "A new verification code has been sent.");
+  }, [canResend, countdown, showResendNotice]);
 
   const handleChange = (index: number, value: string) => {
     // Only allow numbers
@@ -78,8 +123,30 @@ export default function Verify() {
             </button>
           </form>
 
-          <div className={styles.resendText}>
-            Didn't receive the code? <button className={styles.resendLink}>Resend (0:59)</button>
+          <div className={styles.resendSection}>
+            <div className={styles.resendText}>
+              Didn't receive the code?{" "}
+              <button
+                type="button"
+                className={styles.resendLink}
+                onClick={handleResend}
+              >
+                {canResend ? "Resend Code" : `Resend (0:${countdown.toString().padStart(2, "0")})`}
+              </button>
+            </div>
+
+            <div className={styles.resendFeedbackSlot} aria-live="polite" aria-atomic="true">
+              {resendNotice && (
+                <p
+                  className={`${styles.resendFeedback} ${
+                    resendNotice.variant === "success" ? styles.resendFeedbackSuccess : styles.resendFeedbackWarning
+                  }`}
+                  role="status"
+                >
+                  {resendNotice.message}
+                </p>
+              )}
+            </div>
           </div>
 
           <Link href="/login" className={styles.backLink}>

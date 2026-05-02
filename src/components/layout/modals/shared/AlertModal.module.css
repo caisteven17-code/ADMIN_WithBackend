@@ -1,0 +1,203 @@
+/* ── Alert Modal Overlay ── */
+.alertOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  backdrop-filter: blur(6px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Alert Modal Container ── */
+.alertModal {
+  background-color: #fff;
+  border-radius: 16px;
+  width: 420px;
+  max-width: 90vw;
+  box-shadow:
+    0 20px 60px -15px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  animation: slideUp 0.25s ease-out;
+}
+
+/* ── Icon Banner ── */
+.iconBanner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1.75rem 1.5rem 1rem;
+}
+
+.iconCircle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+/* Pulse ring animation behind icon */
+.iconCircle::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  opacity: 0.15;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.15; }
+  50% { transform: scale(1.1); opacity: 0.08; }
+}
+
+/* ── Variant: Warning (amber) ── */
+.iconCircleWarning {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  color: #b45309;
+}
+
+.iconCircleWarning::before {
+  background-color: #f59e0b;
+}
+
+/* ── Variant: Success (green) ── */
+.iconCircleSuccess {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  color: #166534;
+}
+
+.iconCircleSuccess::before {
+  background-color: #22c55e;
+}
+
+/* ── Variant: Error / Reject (red) ── */
+.iconCircleError {
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  color: #991b1b;
+}
+
+.iconCircleError::before {
+  background-color: #ef4444;
+}
+
+/* ── Body ── */
+.alertBody {
+  padding: 0 2rem 1.5rem;
+  text-align: center;
+}
+
+.alertTitle {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+  line-height: 1.35;
+}
+
+.alertMessage {
+  font-size: 0.92rem;
+  color: #6b7280;
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* ── Footer / Actions ── */
+.alertFooter {
+  padding: 0 2rem 1.75rem;
+  display: flex;
+  justify-content: center;
+}
+
+.alertBtn {
+  width: 100%;
+  padding: 0.7rem 1.5rem;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  letter-spacing: 0.01em;
+}
+
+.alertBtn:active {
+  transform: scale(0.98);
+}
+
+/* ── Button variants ── */
+.alertBtnWarning {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.alertBtnWarning:hover {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
+}
+
+.alertBtnSuccess {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+.alertBtnSuccess:hover {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.4);
+}
+
+.alertBtnError {
+  background: linear-gradient(135deg, #9b2c2c, #7a2222);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(155, 44, 44, 0.3);
+}
+
+.alertBtnError:hover {
+  background: linear-gradient(135deg, #7a2222, #5e1a1a);
+  box-shadow: 0 4px 16px rgba(155, 44, 44, 0.4);
+}
+
+/* ── Accent bar at top of modal ── */
+.accentBar {
+  height: 4px;
+  width: 100%;
+}
+
+.accentBarWarning {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24, #f59e0b);
+}
+
+.accentBarSuccess {
+  background: linear-gradient(90deg, #22c55e, #4ade80, #22c55e);
+}
+
+.accentBarError {
+  background: linear-gradient(90deg, #9b2c2c, #dc2626, #9b2c2c);
+}

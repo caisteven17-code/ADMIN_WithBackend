@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { X, Eye, EyeOff } from "lucide-react";
+import AlertModal from "./shared/AlertModal";
 import styles from "./ChangePasswordModal.module.css";
 
 interface ChangePasswordModalProps {
@@ -13,13 +14,35 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertVariant, setAlertVariant] = useState<"warning" | "success">("success");
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Frontend mock: just close the modal when they submit
-    onClose();
+    if (newPassword !== confirmPassword) {
+      setAlertVariant("warning");
+      setAlertTitle("Passwords Don't Match");
+      setAlertMessage("New password and confirm password must match. Please try again.");
+      setAlertOpen(true);
+      return;
+    }
+    setAlertVariant("success");
+    setAlertTitle("Password Updated");
+    setAlertMessage("Your password has been updated successfully.");
+    setAlertOpen(true);
+  };
+
+  const handleAlertClose = () => {
+    setAlertOpen(false);
+    if (alertVariant === "success") {
+      onClose();
+    }
   };
 
   return (
@@ -50,7 +73,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                 className={styles.eyeBtn} 
                 onClick={() => setShowCurrent(!showCurrent)}
               >
-                {showCurrent ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showCurrent ? <Eye size={18} /> : <EyeOff size={18} />}
               </button>
             </div>
           </div>
@@ -63,13 +86,15 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                 placeholder="Enter new password"
                 required
                 className={styles.input}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
               />
               <button 
                 type="button" 
                 className={styles.eyeBtn} 
                 onClick={() => setShowNew(!showNew)}
               >
-                {showNew ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showNew ? <Eye size={18} /> : <EyeOff size={18} />}
               </button>
             </div>
           </div>
@@ -82,13 +107,15 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                 placeholder="Confirm new password"
                 required
                 className={styles.input}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
               />
               <button 
                 type="button" 
                 className={styles.eyeBtn} 
                 onClick={() => setShowConfirm(!showConfirm)}
               >
-                {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showConfirm ? <Eye size={18} /> : <EyeOff size={18} />}
               </button>
             </div>
           </div>
@@ -103,6 +130,14 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
           </div>
         </form>
       </div>
+
+      <AlertModal
+        isOpen={alertOpen}
+        onClose={handleAlertClose}
+        variant={alertVariant}
+        title={alertTitle}
+        message={alertMessage}
+      />
     </div>
   );
 }

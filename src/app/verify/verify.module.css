@@ -129,9 +129,12 @@
   background-color: #7a2222;
 }
 
+.resendSection {
+  margin-top: 1.5rem;
+}
+
 .resendText {
   text-align: center;
-  margin-top: 1.5rem;
   font-size: 0.9rem;
   color: #666;
 }
@@ -148,6 +151,39 @@
 
 .resendLink:hover {
   text-decoration: underline;
+}
+
+.resendFeedbackSlot {
+  min-height: 2rem;
+  display: flex;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.resendFeedback {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.resendFeedbackWarning {
+  background-color: #fff1f2;
+  color: #be123c;
+  border: 1px solid #fecdd3;
+}
+
+.resendFeedbackSuccess {
+  background-color: #ecfdf3;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
 }
 
 .backLink {
