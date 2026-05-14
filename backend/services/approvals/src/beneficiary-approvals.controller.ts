@@ -110,4 +110,130 @@ export class BeneficiaryApprovalsController {
     );
     return result;
   }
+
+  /**
+   * POST /api/approvals/beneficiaries/:id/documents/approve
+   * Approve beneficiary documents
+   */
+  @Post(':id/documents/approve')
+  @Protected()
+  async approveDocument(
+    @Param('id') beneficiaryId: string,
+    @Body() body: { adminId: string },
+    @Req() req: any,
+  ) {
+    const adminEmail = req.user?.email || 'admin@hopecard.com';
+    const result = await this.approvalsService.approveDocument(
+      beneficiaryId,
+      body.adminId,
+      adminEmail,
+    );
+    return result;
+  }
+
+  /**
+   * POST /api/approvals/beneficiaries/:id/documents/reject
+   * Reject beneficiary documents
+   */
+  @Post(':id/documents/reject')
+  @Protected()
+  async rejectDocument(
+    @Param('id') beneficiaryId: string,
+    @Body() body: { adminId: string; reason?: string },
+    @Req() req: any,
+  ) {
+    const adminEmail = req.user?.email || 'admin@hopecard.com';
+    const result = await this.approvalsService.rejectDocument(
+      beneficiaryId,
+      body.adminId,
+      body.reason,
+      adminEmail,
+    );
+    return result;
+  }
+
+  /**
+   * POST /api/approvals/beneficiaries/:id/bank/approve
+   * Approve beneficiary bank details
+   */
+  @Post(':id/bank/approve')
+  @Protected()
+  async approveBank(
+    @Param('id') beneficiaryId: string,
+    @Body() body: { adminId: string },
+    @Req() req: any,
+  ) {
+    const adminEmail = req.user?.email || 'admin@hopecard.com';
+    const result = await this.approvalsService.approveBank(
+      beneficiaryId,
+      body.adminId,
+      adminEmail,
+    );
+    return result;
+  }
+
+  /**
+   * POST /api/approvals/beneficiaries/:id/bank/reject
+   * Reject beneficiary bank details
+   */
+  @Post(':id/bank/reject')
+  @Protected()
+  async rejectBank(
+    @Param('id') beneficiaryId: string,
+    @Body() body: { adminId: string; reason?: string },
+    @Req() req: any,
+  ) {
+    const adminEmail = req.user?.email || 'admin@hopecard.com';
+    const result = await this.approvalsService.rejectBank(
+      beneficiaryId,
+      body.adminId,
+      body.reason,
+      adminEmail,
+    );
+    return result;
+  }
+
+  /**
+   * GET /api/approvals/beneficiaries/documents
+   * Get all identity document approvals
+   */
+  @Get('documents')
+  @Protected()
+  async getDocumentApprovals(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+  ) {
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(100, parseInt(limit) || 10);
+    const result = await this.approvalsService.getDocumentApprovals(pageNum, limitNum);
+    return {
+      success: true,
+      data: result.data,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+    };
+  }
+
+  /**
+   * GET /api/approvals/beneficiaries/bank
+   * Get all bank account approvals
+   */
+  @Get('bank')
+  @Protected()
+  async getBankApprovals(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+  ) {
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(100, parseInt(limit) || 10);
+    const result = await this.approvalsService.getBankApprovals(pageNum, limitNum);
+    return {
+      success: true,
+      data: result.data,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+    };
+  }
 }

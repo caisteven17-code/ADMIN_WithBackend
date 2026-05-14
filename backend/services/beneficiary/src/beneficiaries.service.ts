@@ -49,12 +49,12 @@ export class BeneficiariesService {
       if (managerIds.length > 0) {
         const { data: managers } = await supabase
           .from('campaign_manager_profiles')
-          .select('id, first_name, last_name, full_name, organization_name')
-          .in('id', managerIds);
+          .select('id, auth_user_id, first_name, last_name, organization_name')
+          .in('auth_user_id', managerIds);
           
         managersMap = (managers || []).reduce((acc, m) => {
-          const name = (m.first_name ? `${m.first_name} ${m.last_name || ''}`.trim() : m.full_name);
-          acc[m.id] = name || m.organization_name || 'Unknown Manager';
+          const name = (m.first_name ? `${m.first_name} ${m.last_name || ''}`.trim() : '');
+          acc[m.auth_user_id] = name || m.organization_name || 'Unknown Manager';
           return acc;
         }, {} as Record<string, string>);
       }
@@ -64,16 +64,28 @@ export class BeneficiariesService {
       let beneficiariesMap: Record<string, { name: string, id: string }> = {};
 
       if (campaignIds.length > 0) {
-        // Fetch junction data
+        // Fetch from junction table
         const { data: junctionData } = await supabase
           .from('campaign_beneficiaries')
           .select('campaign_id, beneficiary_profile_id')
           .in('campaign_id', campaignIds);
 
+        // Also fetch from direct campaign_id link in beneficiary_profiles
+        const { data: directLinks } = await supabase
+          .from('beneficiary_profiles')
+          .select('id, first_name, last_name, campaign_id')
+          .in('campaign_id', campaignIds);
+
         const beneficiaryProfileIds = [...new Set(junctionData?.map(j => j.beneficiary_profile_id).filter(id => id))];
 
-        if (beneficiaryProfileIds.length > 0) {
-          // Fetch actual profile names
+        // Combine profile IDs from both sources
+        const allProfileIds = [...new Set([
+          ...beneficiaryProfileIds,
+          ...(directLinks?.map(p => p.id) || [])
+        ])];
+
+        if (allProfileIds.length > 0) {
+          // Fetch actual profile names for those in junction table (directLinks already has names)
           const { data: profiles } = await supabase
             .from('beneficiary_profiles')
             .select('id, first_name, last_name')
@@ -84,16 +96,27 @@ export class BeneficiariesService {
             return acc;
           }, {} as Record<string, string>);
 
-          // Map back to campaign ID
-          beneficiariesMap = (junctionData || []).reduce((acc, j) => {
+          // Initialize beneficiaries map with direct links first
+          if (directLinks) {
+            directLinks.forEach(p => {
+              if (p.campaign_id) {
+                beneficiariesMap[p.campaign_id] = {
+                  name: `${p.first_name || ''} ${p.last_name || ''}`.trim() || 'Unknown Beneficiary',
+                  id: p.id
+                };
+              }
+            });
+          }
+
+          // Override/Add with junction data (usually junction table is the source of truth if both exist)
+          (junctionData || []).forEach(j => {
             if (j.campaign_id && j.beneficiary_profile_id) {
-              acc[j.campaign_id] = {
+              beneficiariesMap[j.campaign_id] = {
                 name: profilesMap[j.beneficiary_profile_id] || 'Unknown Beneficiary',
                 id: j.beneficiary_profile_id
               };
             }
-            return acc;
-          }, {} as Record<string, { name: string, id: string }>);
+          });
         }
       }
 

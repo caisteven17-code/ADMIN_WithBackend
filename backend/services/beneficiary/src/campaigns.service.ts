@@ -45,13 +45,13 @@ export class CampaignsService {
       if (managerIds.length > 0) {
         const { data: managers } = await supabase
           .from('campaign_manager_profiles')
-          .select('id, first_name, last_name, full_name, organization')
-          .in('id', managerIds);
+          .select('id, auth_user_id, first_name, last_name, organization_name')
+          .in('auth_user_id', managerIds);
           
         if (managers) {
           managersMap = managers.reduce((acc, m) => {
-            const name = (m.first_name ? `${m.first_name} ${m.last_name || ''}`.trim() : m.full_name);
-            acc[m.id] = name || m.organization || 'Unknown Manager';
+            const name = (m.first_name ? `${m.first_name} ${m.last_name || ''}`.trim() : '');
+            acc[m.auth_user_id] = name || m.organization_name || 'Unknown Manager';
             return acc;
           }, {} as Record<string, string>);
         }
