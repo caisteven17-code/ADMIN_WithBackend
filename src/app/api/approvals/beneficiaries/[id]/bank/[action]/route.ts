@@ -22,9 +22,7 @@ export async function POST(
 
     const body = await request.json();
     const BACKEND_URL = await getBackendUrl();
-    const url = `${BACKEND_URL}/api/approvals/digital-donors/${id}/${action}`;
-
-    console.log(`[API ROUTE] Forwarding donor ${action} for ${id} to ${url}`);
+    const url = `${BACKEND_URL}/api/approvals/beneficiaries/${id}/bank/${action}`;
 
     const response = await fetch(url, {
       method: 'POST',
@@ -33,29 +31,19 @@ export async function POST(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
-      cache: 'no-store',
     });
 
-    console.log(`[API ROUTE] Backend responded with status: ${response.status}`);
-
     if (!response.ok) {
-      const errorText = await response.text();
-      let errorData;
-      try {
-        errorData = JSON.parse(errorText);
-      } catch (e) {
-        errorData = { message: errorText };
-      }
-      console.error(`[API ROUTE] Backend error:`, errorData);
-      return NextResponse.json(errorData, { status: response.status });
+      const error = await response.json().catch(() => ({}));
+      return NextResponse.json(error, { status: response.status });
     }
 
     const data = await response.json();
     return NextResponse.json(data);
-  } catch (error: any) {
-    console.error('Error processing digital donor approval action:', error);
+  } catch (error) {
+    console.error('Error processing bank approval action:', error);
     return NextResponse.json(
-      { error: 'Failed to process approval action', details: error.message },
+      { error: 'Failed to process bank approval action' },
       { status: 500 }
     );
   }

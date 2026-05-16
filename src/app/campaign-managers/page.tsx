@@ -56,6 +56,8 @@ export default function CampaignManagers() {
           date: m.created_at?.split('T')[0] || '',
           docsVerified: m.documents_verified || false,
           status: m.verification_status?.charAt(0).toUpperCase() + m.verification_status?.slice(1) || 'Pending',
+          secRegistrationUrl: m.sec_registration_url,
+          organizationalCertificateUrl: m.organizational_certificate_url,
         }));
 
         setManagers(formattedData);

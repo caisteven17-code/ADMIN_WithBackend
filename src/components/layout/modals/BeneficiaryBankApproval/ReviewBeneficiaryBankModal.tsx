@@ -39,7 +39,7 @@ export default function ReviewBeneficiaryBankModal({
       const adminId = adminInfo.id || "admin";
 
       const response = await fetch(
-        `/api/approvals/beneficiaries/${beneficiaryData.id}/approve-bank`,
+        `/api/approvals/beneficiaries/${beneficiaryData.id}/bank/approve`,
         {
           method: "POST",
           headers: {
@@ -82,7 +82,7 @@ export default function ReviewBeneficiaryBankModal({
       const adminId = adminInfo.id || "admin";
 
       const response = await fetch(
-        `/api/approvals/beneficiaries/${beneficiaryData.id}/reject-bank`,
+        `/api/approvals/beneficiaries/${beneficiaryData.id}/bank/reject`,
         {
           method: "POST",
           headers: {

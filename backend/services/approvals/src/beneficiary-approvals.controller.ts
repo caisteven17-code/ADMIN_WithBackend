@@ -36,14 +36,14 @@ export class BeneficiaryApprovalsController {
   @Protected()
   async approveBeneficiary(
     @Param('id') beneficiaryId: string,
-    @Body() body: { adminId: string },
+    @Body() body: { adminId?: string },
     @Req() req: any,
   ) {
-    // Get admin email from JWT token context
+    const adminId = req.user?.sub || body.adminId || 'admin';
     const adminEmail = req.user?.email || 'admin@hopecard.com';
     const result = await this.approvalsService.approveBeneficiary(
       beneficiaryId,
-      body.adminId,
+      adminId,
       adminEmail,
     );
     return result;
@@ -57,14 +57,14 @@ export class BeneficiaryApprovalsController {
   @Protected()
   async rejectBeneficiary(
     @Param('id') beneficiaryId: string,
-    @Body() body: { adminId: string; reason?: string },
+    @Body() body: { adminId?: string; reason?: string },
     @Req() req: any,
   ) {
-    // Get admin email from JWT token context
+    const adminId = req.user?.sub || body.adminId || 'admin';
     const adminEmail = req.user?.email || 'admin@hopecard.com';
     const result = await this.approvalsService.rejectBeneficiary(
       beneficiaryId,
-      body.adminId,
+      adminId,
       body.reason,
       adminEmail,
     );
@@ -93,14 +93,14 @@ export class BeneficiaryApprovalsController {
   @Protected()
   async sendDonation(
     @Param('id') beneficiaryId: string,
-    @Body() body: { adminId: string; amount: number; campaign?: string; notes?: string },
+    @Body() body: { adminId?: string; amount: number; campaign?: string; notes?: string },
     @Req() req: any,
   ) {
-    // Get admin email from JWT token context
+    const adminId = req.user?.sub || body.adminId || 'admin';
     const adminEmail = req.user?.email || 'admin@hopecard.com';
     const result = await this.approvalsService.sendDonation(
       beneficiaryId,
-      body.adminId,
+      adminId,
       {
         amount: body.amount,
         campaign: body.campaign,
@@ -119,13 +119,14 @@ export class BeneficiaryApprovalsController {
   @Protected()
   async approveDocument(
     @Param('id') beneficiaryId: string,
-    @Body() body: { adminId: string },
+    @Body() body: { adminId?: string },
     @Req() req: any,
   ) {
+    const adminId = req.user?.sub || body.adminId || 'admin';
     const adminEmail = req.user?.email || 'admin@hopecard.com';
     const result = await this.approvalsService.approveDocument(
       beneficiaryId,
-      body.adminId,
+      adminId,
       adminEmail,
     );
     return result;
@@ -139,13 +140,14 @@ export class BeneficiaryApprovalsController {
   @Protected()
   async rejectDocument(
     @Param('id') beneficiaryId: string,
-    @Body() body: { adminId: string; reason?: string },
+    @Body() body: { adminId?: string; reason?: string },
     @Req() req: any,
   ) {
+    const adminId = req.user?.sub || body.adminId || 'admin';
     const adminEmail = req.user?.email || 'admin@hopecard.com';
     const result = await this.approvalsService.rejectDocument(
       beneficiaryId,
-      body.adminId,
+      adminId,
       body.reason,
       adminEmail,
     );
@@ -160,13 +162,14 @@ export class BeneficiaryApprovalsController {
   @Protected()
   async approveBank(
     @Param('id') beneficiaryId: string,
-    @Body() body: { adminId: string },
+    @Body() body: { adminId?: string },
     @Req() req: any,
   ) {
+    const adminId = req.user?.sub || body.adminId || 'admin';
     const adminEmail = req.user?.email || 'admin@hopecard.com';
     const result = await this.approvalsService.approveBank(
       beneficiaryId,
-      body.adminId,
+      adminId,
       adminEmail,
     );
     return result;
@@ -180,13 +183,14 @@ export class BeneficiaryApprovalsController {
   @Protected()
   async rejectBank(
     @Param('id') beneficiaryId: string,
-    @Body() body: { adminId: string; reason?: string },
+    @Body() body: { adminId?: string; reason?: string },
     @Req() req: any,
   ) {
+    const adminId = req.user?.sub || body.adminId || 'admin';
     const adminEmail = req.user?.email || 'admin@hopecard.com';
     const result = await this.approvalsService.rejectBank(
       beneficiaryId,
-      body.adminId,
+      adminId,
       body.reason,
       adminEmail,
     );
