@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, Query, Req } from '@nestjs/common';
 import { DigitalDonorApprovalsService } from './digital-donor-approvals.service';
 import { Protected } from '@shared/protected.decorator';
 
@@ -36,11 +36,13 @@ export class DigitalDonorApprovalsController {
   @Protected()
   async approveDonor(
     @Param('id') donorId: string,
-    @Body() body: { adminId: string },
+    @Body() body: { adminId?: string },
+    @Req() req: any,
   ) {
+    const adminId = req.user?.sub || body.adminId || 'admin';
     const result = await this.approvalsService.approveDonor(
       donorId,
-      body.adminId,
+      adminId,
     );
     return result;
   }
@@ -53,11 +55,13 @@ export class DigitalDonorApprovalsController {
   @Protected()
   async rejectDonor(
     @Param('id') donorId: string,
-    @Body() body: { adminId: string; reason?: string },
+    @Body() body: { adminId?: string; reason?: string },
+    @Req() req: any,
   ) {
+    const adminId = req.user?.sub || body.adminId || 'admin';
     const result = await this.approvalsService.rejectDonor(
       donorId,
-      body.adminId,
+      adminId,
       body.reason,
     );
     return result;

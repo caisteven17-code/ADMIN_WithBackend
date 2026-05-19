@@ -10,6 +10,8 @@ export interface CampaignManagerApproval {
   organization: string;
   status: string;
   created_at: string;
+  sec_registration_url?: string;
+  organizational_certificate_url?: string;
   [key: string]: any;
 }
 
@@ -49,13 +51,26 @@ export class CampaignManagerApprovalsService {
       // Fetch user emails from auth.users for managers that don't have email
       const managersWithEmail = await Promise.all(
         (data || []).map(async (manager) => {
+          // Construct public URLs for documents
+          const getPublicUrl = (path: string) => {
+            if (!path) return undefined;
+            const { data: { publicUrl } } = supabase.storage
+              .from('camp-man-files')
+              .getPublicUrl(path);
+            return publicUrl;
+          };
+
+          const mappedManager = {
+            ...manager,
+            organization: manager.organization_name,
+            verification_status: manager.status,
+            documents_verified: !!(manager.sec_registration && manager.organizational_certificate),
+            sec_registration_url: getPublicUrl(manager.sec_registration),
+            organizational_certificate_url: getPublicUrl(manager.organizational_certificate)
+          };
+
           if (manager.email) {
-            return {
-              ...manager,
-              organization: manager.organization_name,
-              verification_status: manager.status,
-              documents_verified: !!manager.organization_document_key
-            };
+            return mappedManager;
           }
           
           if (manager.auth_user_id) {
@@ -67,20 +82,12 @@ export class CampaignManagerApprovalsService {
             
             if (authUser?.email) {
               return {
-                ...manager,
+                ...mappedManager,
                 email: authUser.email,
-                organization: manager.organization_name,
-                verification_status: manager.status,
-                documents_verified: !!manager.organization_document_key
               };
             }
           }
-          return {
-            ...manager,
-            organization: manager.organization_name,
-            verification_status: manager.status,
-            documents_verified: !!manager.organization_document_key
-          };
+          return mappedManager;
         })
       );
       
@@ -99,18 +106,31 @@ export class CampaignManagerApprovalsService {
     adminId: string,
   ): Promise<{ success: boolean; message: string; data?: any }> {
     try {
+      // More permissive UUID regex
+      const isUuid = (uuid: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uuid);
+      const validAdminId = isUuid(adminId) ? adminId : null;
+      
+      console.log(`[SERVICE] Approving CM ${campaignManagerId} (adminId: ${adminId}, valid: ${validAdminId})`);
+
       const { data, error } = await supabase
         .from('campaign_manager_profiles')
         .update({
           status: 'approved',
+          approved_by: validAdminId,
+          approved_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
         .eq('id', campaignManagerId)
         .select();
 
       if (error) {
-        console.error('Supabase error approving campaign manager:', error);
-        return { success: false, message: 'Failed to approve campaign manager' };
+        console.error('❌ Supabase error approving campaign manager:', error);
+        return { success: false, message: `Database error: ${error.message}` };
+      }
+
+      if (!data || data.length === 0) {
+        console.warn('⚠️ No rows updated for CM approval:', campaignManagerId);
+        return { success: false, message: 'No record found with that ID' };
       }
 
       console.log('✅ Campaign manager approved:', campaignManagerId);
@@ -134,19 +154,32 @@ export class CampaignManagerApprovalsService {
     reason?: string,
   ): Promise<{ success: boolean; message: string; data?: any }> {
     try {
+      // More permissive UUID regex
+      const isUuid = (uuid: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uuid);
+      const validAdminId = isUuid(adminId) ? adminId : null;
+
+      console.log(`[SERVICE] Rejecting CM ${campaignManagerId} (adminId: ${adminId}, valid: ${validAdminId})`);
+
       const { data, error } = await supabase
         .from('campaign_manager_profiles')
         .update({
           status: 'rejected',
           rejection_reason: reason || null,
+          approved_by: validAdminId,
+          approved_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
         .eq('id', campaignManagerId)
         .select();
 
       if (error) {
-        console.error('Supabase error rejecting campaign manager:', error);
-        return { success: false, message: 'Failed to reject campaign manager' };
+        console.error('❌ Supabase error rejecting campaign manager:', error);
+        return { success: false, message: `Database error: ${error.message}` };
+      }
+
+      if (!data || data.length === 0) {
+        console.warn('⚠️ No rows updated for CM rejection:', campaignManagerId);
+        return { success: false, message: 'No record found with that ID' };
       }
 
       console.log('✅ Campaign manager rejected:', campaignManagerId);

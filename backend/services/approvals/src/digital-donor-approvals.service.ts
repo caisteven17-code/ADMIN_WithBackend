@@ -76,6 +76,9 @@ export class DigitalDonorApprovalsService {
     try {
       console.log('🔍 Starting approval - Params:', { donorId, adminId });
       
+      const isUuid = (uuid: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uuid);
+      const validAdminId = isUuid(adminId) ? adminId : null;
+
       // First, verify the donor exists
       const { data: existingDonor, error: fetchError } = await supabase
         .from('digital_donor_profiles')
@@ -90,9 +93,11 @@ export class DigitalDonorApprovalsService {
 
       console.log('✅ Found donor:', { id: existingDonor?.id, name: existingDonor?.name, currentStatus: existingDonor?.status });
 
-      // Update status - same logic as reject
+      // Update status
       const updatePayload: any = {
         status: 'approved',
+        verified_by: validAdminId,
+        verified_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
 
@@ -104,24 +109,17 @@ export class DigitalDonorApprovalsService {
         .eq('id', donorId)
         .select();
 
-      console.log('📊 Update response - Error:', error, 'Data rows affected:', data?.length);
-
       if (error) {
         console.error('❌ Supabase error approving digital donor:', error);
         return { success: false, message: `Failed to approve digital donor: ${error.message}` };
       }
 
       if (!data || data.length === 0) {
-        console.warn('⚠️ Update returned no rows - checking final state');
-        const { data: finalCheck } = await supabase
-          .from('digital_donor_profiles')
-          .select('status')
-          .eq('id', donorId)
-          .single();
-        console.log('📋 Final check - Status after update:', finalCheck);
+        console.warn('⚠️ No rows updated for digital donor approval:', donorId);
+        return { success: false, message: 'No record found with that ID' };
       }
 
-      console.log('✅ Digital donor approved:', donorId, 'New data:', data?.[0]);
+      console.log('✅ Digital donor approved:', donorId);
       return {
         success: true,
         message: 'Digital donor approved successfully',
@@ -144,6 +142,9 @@ export class DigitalDonorApprovalsService {
     try {
       console.log('🔍 Starting rejection - Params:', { donorId, adminId, reason });
       
+      const isUuid = (uuid: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uuid);
+      const validAdminId = isUuid(adminId) ? adminId : null;
+
       // First, verify the donor exists
       const { data: existingDonor, error: fetchError } = await supabase
         .from('digital_donor_profiles')
@@ -158,10 +159,12 @@ export class DigitalDonorApprovalsService {
 
       console.log('✅ Found donor:', { id: existingDonor?.id, name: existingDonor?.name, currentStatus: existingDonor?.status });
 
-      // Update status - same structure as approve
+      // Update status
       const updatePayload: any = {
         status: 'rejected',
         rejection_reason: reason || null,
+        verified_by: validAdminId,
+        verified_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
 
@@ -173,24 +176,17 @@ export class DigitalDonorApprovalsService {
         .eq('id', donorId)
         .select();
 
-      console.log('📊 Update response - Error:', error, 'Data rows affected:', data?.length);
-
       if (error) {
         console.error('❌ Supabase error rejecting digital donor:', error);
         return { success: false, message: `Failed to reject digital donor: ${error.message}` };
       }
 
       if (!data || data.length === 0) {
-        console.warn('⚠️ Update returned no rows - checking final state');
-        const { data: finalCheck } = await supabase
-          .from('digital_donor_profiles')
-          .select('status')
-          .eq('id', donorId)
-          .single();
-        console.log('📋 Final check - Status after update:', finalCheck);
+        console.warn('⚠️ No rows updated for digital donor rejection:', donorId);
+        return { success: false, message: 'No record found with that ID' };
       }
 
-      console.log('✅ Digital donor rejected:', donorId, 'New data:', data?.[0]);
+      console.log('✅ Digital donor rejected:', donorId);
       return {
         success: true,
         message: 'Digital donor rejected successfully',

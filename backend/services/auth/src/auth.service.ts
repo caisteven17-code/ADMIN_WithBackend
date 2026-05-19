@@ -204,26 +204,19 @@ export class AuthService {
 
       // Get admin data continues below
 
-      // Get admin data from Supabase auth
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+      // Get admin data from Supabase auth using getUserByEmail
+      const { data: userData, error: authError } = await supabase.auth.admin.getUserByEmail(email);
 
       let adminData;
-      if (authError || !authUsers) {
-        console.log(`[AUTH] ⚠️ Could not fetch auth users, using email for basic info`);
+      if (authError || !userData?.user) {
+        console.log(`[AUTH] ⚠️ Could not fetch user by email: ${email}`, authError?.message);
         adminData = {
           id: "unknown",
           email: email,
           name: email.split("@")[0],
         };
       } else {
-        const authUser = authUsers.users.find(u => u.email === email);
-        if (!authUser) {
-          console.error(`[AUTH] ❌ User not found in auth`);
-          return {
-            success: false,
-            error: "User not found",
-          };
-        }
+        const authUser = userData.user;
         adminData = {
           id: authUser.id,
           email: authUser.email,

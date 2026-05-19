@@ -21,13 +21,15 @@ interface ReviewBeneficiaryApprovalModalProps {
   onClose: () => void;
   beneficiaryData: any;
   onUpdate?: (beneficiary: any) => void;
+  mode?: 'application' | 'documents';
 }
 
 export default function ReviewBeneficiaryApprovalModal({ 
   isOpen, 
   onClose, 
   beneficiaryData,
-  onUpdate
+  onUpdate,
+  mode = 'application'
 }: ReviewBeneficiaryApprovalModalProps) {
   const [idVerified, setIdVerified] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
@@ -51,7 +53,11 @@ export default function ReviewBeneficiaryApprovalModal({
       const adminInfo = JSON.parse(adminInfoStr);
       const adminId = adminInfo.id || 'admin';
 
-      const response = await fetch(`/api/approvals/beneficiaries/${beneficiaryData.id}/approve`, {
+      const endpoint = mode === 'documents' 
+        ? `/api/approvals/beneficiaries/${beneficiaryData.beneficiaryId || beneficiaryData.id}/documents/approve`
+        : `/api/approvals/beneficiaries/${beneficiaryData.id}/approve`;
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -92,7 +98,11 @@ export default function ReviewBeneficiaryApprovalModal({
       const adminInfo = JSON.parse(adminInfoStr);
       const adminId = adminInfo.id || 'admin';
 
-      const response = await fetch(`/api/approvals/beneficiaries/${beneficiaryData.id}/reject`, {
+      const endpoint = mode === 'documents' 
+        ? `/api/approvals/beneficiaries/${beneficiaryData.beneficiaryId || beneficiaryData.id}/documents/reject`
+        : `/api/approvals/beneficiaries/${beneficiaryData.id}/reject`;
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

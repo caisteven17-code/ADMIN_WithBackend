@@ -102,6 +102,8 @@ export class BeneficiaryApprovalsService {
         .from('beneficiary_profiles')
         .update({
           status: 'approved',
+          verified_by: adminId,
+          verified_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
         .eq('id', beneficiaryId)
@@ -160,6 +162,8 @@ export class BeneficiaryApprovalsService {
         .update({
           status: 'rejected',
           rejection_reason: reason || null,
+          verified_by: adminId,
+          verified_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
         .eq('id', beneficiaryId)

@@ -29,6 +29,175 @@ export class BeneficiaryApprovalsController {
   }
 
   /**
+   * POST /api/approvals/beneficiaries/:id/approve
+   * Approve a beneficiary application
+   */
+  @Post(':id/approve')
+  @Protected()
+  async approveBeneficiary(
+    @Param('id') beneficiaryId: string,
+    @Body() body: { adminId?: string },
+    @Req() req: any,
+  ) {
+    const adminId = req.user?.sub || body.adminId || 'admin';
+    const adminEmail = req.user?.email || 'admin@hopecard.com';
+    const result = await this.approvalsService.approveBeneficiary(
+      beneficiaryId,
+      adminId,
+      adminEmail,
+    );
+    return result;
+  }
+
+  /**
+   * POST /api/approvals/beneficiaries/:id/reject
+   * Reject a beneficiary application
+   */
+  @Post(':id/reject')
+  @Protected()
+  async rejectBeneficiary(
+    @Param('id') beneficiaryId: string,
+    @Body() body: { adminId?: string; reason?: string },
+    @Req() req: any,
+  ) {
+    const adminId = req.user?.sub || body.adminId || 'admin';
+    const adminEmail = req.user?.email || 'admin@hopecard.com';
+    const result = await this.approvalsService.rejectBeneficiary(
+      beneficiaryId,
+      adminId,
+      body.reason,
+      adminEmail,
+    );
+    return result;
+  }
+
+  /**
+   * GET /api/approvals/beneficiaries/:id/history
+   * Get approval history for a beneficiary
+   */
+  @Get(':id/history')
+  @Protected()
+  async getApprovalHistory(@Param('id') beneficiaryId: string) {
+    const history = await this.approvalsService.getApprovalHistory(beneficiaryId);
+    return {
+      success: true,
+      data: history,
+    };
+  }
+
+  /**
+   * POST /api/approvals/beneficiaries/:id/donate
+   * Send/process a donation to a beneficiary
+   */
+  @Post(':id/donate')
+  @Protected()
+  async sendDonation(
+    @Param('id') beneficiaryId: string,
+    @Body() body: { adminId?: string; amount: number; campaign?: string; notes?: string },
+    @Req() req: any,
+  ) {
+    const adminId = req.user?.sub || body.adminId || 'admin';
+    const adminEmail = req.user?.email || 'admin@hopecard.com';
+    const result = await this.approvalsService.sendDonation(
+      beneficiaryId,
+      adminId,
+      {
+        amount: body.amount,
+        campaign: body.campaign,
+        notes: body.notes,
+      },
+      adminEmail,
+    );
+    return result;
+  }
+
+  /**
+   * POST /api/approvals/beneficiaries/:id/documents/approve
+   * Approve beneficiary documents
+   */
+  @Post(':id/documents/approve')
+  @Protected()
+  async approveDocument(
+    @Param('id') beneficiaryId: string,
+    @Body() body: { adminId?: string },
+    @Req() req: any,
+  ) {
+    const adminId = req.user?.sub || body.adminId || 'admin';
+    const adminEmail = req.user?.email || 'admin@hopecard.com';
+    const result = await this.approvalsService.approveDocument(
+      beneficiaryId,
+      adminId,
+      adminEmail,
+    );
+    return result;
+  }
+
+  /**
+   * POST /api/approvals/beneficiaries/:id/documents/reject
+   * Reject beneficiary documents
+   */
+  @Post(':id/documents/reject')
+  @Protected()
+  async rejectDocument(
+    @Param('id') beneficiaryId: string,
+    @Body() body: { adminId?: string; reason?: string },
+    @Req() req: any,
+  ) {
+    const adminId = req.user?.sub || body.adminId || 'admin';
+    const adminEmail = req.user?.email || 'admin@hopecard.com';
+    const result = await this.approvalsService.rejectDocument(
+      beneficiaryId,
+      adminId,
+      body.reason,
+      adminEmail,
+    );
+    return result;
+  }
+
+  /**
+   * POST /api/approvals/beneficiaries/:id/bank/approve
+   * Approve beneficiary bank details
+   */
+  @Post(':id/bank/approve')
+  @Protected()
+  async approveBank(
+    @Param('id') beneficiaryId: string,
+    @Body() body: { adminId?: string },
+    @Req() req: any,
+  ) {
+    const adminId = req.user?.sub || body.adminId || 'admin';
+    const adminEmail = req.user?.email || 'admin@hopecard.com';
+    const result = await this.approvalsService.approveBank(
+      beneficiaryId,
+      adminId,
+      adminEmail,
+    );
+    return result;
+  }
+
+  /**
+   * POST /api/approvals/beneficiaries/:id/bank/reject
+   * Reject beneficiary bank details
+   */
+  @Post(':id/bank/reject')
+  @Protected()
+  async rejectBank(
+    @Param('id') beneficiaryId: string,
+    @Body() body: { adminId?: string; reason?: string },
+    @Req() req: any,
+  ) {
+    const adminId = req.user?.sub || body.adminId || 'admin';
+    const adminEmail = req.user?.email || 'admin@hopecard.com';
+    const result = await this.approvalsService.rejectBank(
+      beneficiaryId,
+      adminId,
+      body.reason,
+      adminEmail,
+    );
+    return result;
+  }
+
+  /**
    * GET /api/approvals/beneficiaries/documents
    * Get all identity document approvals
    */
@@ -70,167 +239,5 @@ export class BeneficiaryApprovalsController {
       page: result.page,
       limit: result.limit,
     };
-  }
-
-  /**
-   * POST /api/approvals/beneficiaries/:id/approve
-   * Approve a beneficiary application
-   */
-  @Post(':id/approve')
-  @Protected()
-  async approveBeneficiary(
-    @Param('id') beneficiaryId: string,
-    @Body() body: { adminId: string },
-    @Req() req: any,
-  ) {
-    const adminEmail = req.user?.email || 'admin@hopecard.com';
-    const result = await this.approvalsService.approveBeneficiary(
-      beneficiaryId,
-      body.adminId,
-      adminEmail,
-    );
-    return result;
-  }
-
-  /**
-   * POST /api/approvals/beneficiaries/:id/reject
-   * Reject a beneficiary application
-   */
-  @Post(':id/reject')
-  @Protected()
-  async rejectBeneficiary(
-    @Param('id') beneficiaryId: string,
-    @Body() body: { adminId: string; reason?: string },
-    @Req() req: any,
-  ) {
-    const adminEmail = req.user?.email || 'admin@hopecard.com';
-    const result = await this.approvalsService.rejectBeneficiary(
-      beneficiaryId,
-      body.adminId,
-      body.reason,
-      adminEmail,
-    );
-    return result;
-  }
-
-  /**
-   * GET /api/approvals/beneficiaries/:id/history
-   * Get approval history for a beneficiary
-   */
-  @Get(':id/history')
-  @Protected()
-  async getApprovalHistory(@Param('id') beneficiaryId: string) {
-    const history = await this.approvalsService.getApprovalHistory(beneficiaryId);
-    return {
-      success: true,
-      data: history,
-    };
-  }
-
-  /**
-   * POST /api/approvals/beneficiaries/:id/donate
-   * Send/process a donation to a beneficiary
-   */
-  @Post(':id/donate')
-  @Protected()
-  async sendDonation(
-    @Param('id') beneficiaryId: string,
-    @Body() body: { adminId: string; amount: number; campaign?: string; notes?: string },
-    @Req() req: any,
-  ) {
-    const adminEmail = req.user?.email || 'admin@hopecard.com';
-    const result = await this.approvalsService.sendDonation(
-      beneficiaryId,
-      body.adminId,
-      {
-        amount: body.amount,
-        campaign: body.campaign,
-        notes: body.notes,
-      },
-      adminEmail,
-    );
-    return result;
-  }
-
-  /**
-   * POST /api/approvals/beneficiaries/:id/documents/approve
-   * Approve beneficiary documents
-   */
-  @Post(':id/documents/approve')
-  @Protected()
-  async approveDocument(
-    @Param('id') beneficiaryId: string,
-    @Body() body: { adminId: string },
-    @Req() req: any,
-  ) {
-    const adminEmail = req.user?.email || 'admin@hopecard.com';
-    const result = await this.approvalsService.approveDocument(
-      beneficiaryId,
-      body.adminId,
-      adminEmail,
-    );
-    return result;
-  }
-
-  /**
-   * POST /api/approvals/beneficiaries/:id/documents/reject
-   * Reject beneficiary documents
-   */
-  @Post(':id/documents/reject')
-  @Protected()
-  async rejectDocument(
-    @Param('id') beneficiaryId: string,
-    @Body() body: { adminId: string; reason?: string },
-    @Req() req: any,
-  ) {
-    const adminEmail = req.user?.email || 'admin@hopecard.com';
-    const result = await this.approvalsService.rejectDocument(
-      beneficiaryId,
-      body.adminId,
-      body.reason,
-      adminEmail,
-    );
-    return result;
-  }
-
-  /**
-   * POST /api/approvals/beneficiaries/:id/bank/approve
-   * Approve beneficiary bank details
-   */
-  @Post(':id/bank/approve')
-  @Protected()
-  async approveBank(
-    @Param('id') beneficiaryId: string,
-    @Body() body: { adminId: string },
-    @Req() req: any,
-  ) {
-    const adminEmail = req.user?.email || 'admin@hopecard.com';
-    const result = await this.approvalsService.approveBank(
-      beneficiaryId,
-      body.adminId,
-      adminEmail,
-    );
-    return result;
-  }
-
-  /**
-   * POST /api/approvals/beneficiaries/:id/bank/reject
-   * Reject beneficiary bank details
-   */
-  @Post(':id/bank/reject')
-  @Protected()
-  async rejectBank(
-    @Param('id') beneficiaryId: string,
-    @Body() body: { adminId: string; reason?: string },
-    @Req() req: any,
-  ) {
-    const adminEmail = req.user?.email || 'admin@hopecard.com';
-    const result = await this.approvalsService.rejectBank(
-      beneficiaryId,
-      body.adminId,
-      body.reason,
-      adminEmail,
-    );
-    return result;
   }
 }

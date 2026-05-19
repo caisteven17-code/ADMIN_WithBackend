@@ -182,6 +182,7 @@ export default function BeneficiaryDocumentsApproval() {
         onClose={() => setIsModalOpen(false)}
         beneficiaryData={selectedBeneficiary}
         onUpdate={handleUpdateBeneficiary}
+        mode="documents"
       />
     </div>
   );

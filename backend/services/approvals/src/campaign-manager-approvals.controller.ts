@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, Query, Req } from '@nestjs/common';
 import { CampaignManagerApprovalsService } from './campaign-manager-approvals.service';
 import { Protected } from '@shared/protected.decorator';
 
@@ -36,11 +36,15 @@ export class CampaignManagerApprovalsController {
   @Protected()
   async approveCampaignManager(
     @Param('id') campaignManagerId: string,
-    @Body() body: { adminId: string },
+    @Body() body: { adminId?: string },
+    @Req() req: any,
   ) {
+    // Priority: 1. ID from JWT (sub), 2. ID from body (fallback)
+    const adminId = req.user?.sub || body.adminId || 'admin';
+    
     const result = await this.approvalsService.approveCampaignManager(
       campaignManagerId,
-      body.adminId,
+      adminId,
     );
     return result;
   }
@@ -53,11 +57,15 @@ export class CampaignManagerApprovalsController {
   @Protected()
   async rejectCampaignManager(
     @Param('id') campaignManagerId: string,
-    @Body() body: { adminId: string; reason?: string },
+    @Body() body: { adminId?: string; reason?: string },
+    @Req() req: any,
   ) {
+    // Priority: 1. ID from JWT (sub), 2. ID from body (fallback)
+    const adminId = req.user?.sub || body.adminId || 'admin';
+
     const result = await this.approvalsService.rejectCampaignManager(
       campaignManagerId,
-      body.adminId,
+      adminId,
       body.reason,
     );
     return result;

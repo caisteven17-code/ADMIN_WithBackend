@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getBackendUrlServer } from '@/lib/backend-discovery-server';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 async function getBackendUrl() {
   return await getBackendUrlServer();
 }
@@ -48,7 +51,13 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json();
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'no-store, max-age=0, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
+    });
   } catch (error) {
     console.error('Error fetching pending digital donor approvals:', error);
     return NextResponse.json(
