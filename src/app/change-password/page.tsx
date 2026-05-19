@@ -40,7 +40,7 @@ export default function ChangePassword() {
     }
 
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3011";
       const token = localStorage.getItem("admin_token");
       
       // Get user email from JWT token stored in localStorage

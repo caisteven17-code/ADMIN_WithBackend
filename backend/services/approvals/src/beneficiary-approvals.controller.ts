@@ -29,6 +29,50 @@ export class BeneficiaryApprovalsController {
   }
 
   /**
+   * GET /api/approvals/beneficiaries/documents
+   * Get all identity document approvals
+   */
+  @Get('documents')
+  @Protected()
+  async getDocumentApprovals(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+  ) {
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(100, parseInt(limit) || 10);
+    const result = await this.approvalsService.getDocumentApprovals(pageNum, limitNum);
+    return {
+      success: true,
+      data: result.data,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+    };
+  }
+
+  /**
+   * GET /api/approvals/beneficiaries/bank
+   * Get all bank account approvals
+   */
+  @Get('bank')
+  @Protected()
+  async getBankApprovals(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+  ) {
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(100, parseInt(limit) || 10);
+    const result = await this.approvalsService.getBankApprovals(pageNum, limitNum);
+    return {
+      success: true,
+      data: result.data,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+    };
+  }
+
+  /**
    * POST /api/approvals/beneficiaries/:id/approve
    * Approve a beneficiary application
    */
@@ -39,7 +83,6 @@ export class BeneficiaryApprovalsController {
     @Body() body: { adminId: string },
     @Req() req: any,
   ) {
-    // Get admin email from JWT token context
     const adminEmail = req.user?.email || 'admin@hopecard.com';
     const result = await this.approvalsService.approveBeneficiary(
       beneficiaryId,
@@ -60,7 +103,6 @@ export class BeneficiaryApprovalsController {
     @Body() body: { adminId: string; reason?: string },
     @Req() req: any,
   ) {
-    // Get admin email from JWT token context
     const adminEmail = req.user?.email || 'admin@hopecard.com';
     const result = await this.approvalsService.rejectBeneficiary(
       beneficiaryId,
@@ -96,7 +138,6 @@ export class BeneficiaryApprovalsController {
     @Body() body: { adminId: string; amount: number; campaign?: string; notes?: string },
     @Req() req: any,
   ) {
-    // Get admin email from JWT token context
     const adminEmail = req.user?.email || 'admin@hopecard.com';
     const result = await this.approvalsService.sendDonation(
       beneficiaryId,
@@ -191,49 +232,5 @@ export class BeneficiaryApprovalsController {
       adminEmail,
     );
     return result;
-  }
-
-  /**
-   * GET /api/approvals/beneficiaries/documents
-   * Get all identity document approvals
-   */
-  @Get('documents')
-  @Protected()
-  async getDocumentApprovals(
-    @Query('page') page: string = '1',
-    @Query('limit') limit: string = '10',
-  ) {
-    const pageNum = Math.max(1, parseInt(page) || 1);
-    const limitNum = Math.min(100, parseInt(limit) || 10);
-    const result = await this.approvalsService.getDocumentApprovals(pageNum, limitNum);
-    return {
-      success: true,
-      data: result.data,
-      total: result.total,
-      page: result.page,
-      limit: result.limit,
-    };
-  }
-
-  /**
-   * GET /api/approvals/beneficiaries/bank
-   * Get all bank account approvals
-   */
-  @Get('bank')
-  @Protected()
-  async getBankApprovals(
-    @Query('page') page: string = '1',
-    @Query('limit') limit: string = '10',
-  ) {
-    const pageNum = Math.max(1, parseInt(page) || 1);
-    const limitNum = Math.min(100, parseInt(limit) || 10);
-    const result = await this.approvalsService.getBankApprovals(pageNum, limitNum);
-    return {
-      success: true,
-      data: result.data,
-      total: result.total,
-      page: result.page,
-      limit: result.limit,
-    };
   }
 }

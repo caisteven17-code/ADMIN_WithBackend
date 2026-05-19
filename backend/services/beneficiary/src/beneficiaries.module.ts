@@ -14,7 +14,7 @@ import { ActivityLogger } from "@shared/activity-logger";
         transport: Transport.TCP,
         options: {
           host: 'localhost',
-          port: 5004,
+          port: 3016,
         },
       },
     ]),

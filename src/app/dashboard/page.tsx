@@ -142,7 +142,7 @@ export default function Dashboard() {
         ]);
         
         if (process.env.NODE_ENV === "development") {
-          setError(`⚠️ Backend unavailable. Check if backend is running on port 5000.`);
+          setError(`⚠️ Backend unavailable. Check if backend is running on port 3011.`);
         } else {
           setError(null);
         }

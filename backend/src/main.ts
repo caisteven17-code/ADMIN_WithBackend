@@ -8,7 +8,7 @@ import { findAvailablePort } from "./common/port-finder";
 import dotenv from "dotenv";
 
 // Configuration constants
-const PORT_RANGE_START = 5000;
+const PORT_RANGE_START = 3011;
 const BACKEND_INFO_FILE = "backend-info.json";
 const DEBUG = process.env.NODE_ENV === "development";
 
@@ -49,7 +49,7 @@ async function bootstrap() {
 
     // Enable CORS
     app.enableCors({
-      origin: process.env.FRONTEND_URL || "http://localhost:3000",
+      origin: process.env.FRONTEND_URL || "http://localhost:3010",
       credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization"],
@@ -96,7 +96,7 @@ async function bootstrap() {
     console.error("   1. Check backend/.env exists and has required variables");
     console.error("   2. Ensure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set");
     console.error("   3. Run: npm install (to install dependencies)");
-    console.error("   4. Ensure at least one port is available (tried 5000-5009)\n");
+    console.error("   4. Ensure at least one port is available (tried 3011-3020)\n");
     process.exit(1);
   }
 }

@@ -79,11 +79,12 @@ export default function BeneficiariesList() {
     setIsConfirmOpen(true);
   };
 
-  // Logic to handle when the user clicks 'Confirm' in the first modal
   const handleDonationSuccess = () => {
-    setIsConfirmOpen(false); // Close the confirm modal
-    // In a real app, you would execute an API call here.
-    setIsSuccessOpen(true);  // Immediately open the success modal
+    setIsConfirmOpen(false);
+    if (selectedItem) {
+      setList(prev => prev.map(item => item.id === selectedItem.id ? { ...item, status: 'Sent' } : item));
+    }
+    setIsSuccessOpen(true);
   };
 
   return (
@@ -115,7 +116,7 @@ export default function BeneficiariesList() {
                 <td><span className={`${styles.badge} ${styles[`badge${item.status}`]}`}>{item.status}</span></td>
                 <td>
                   {item.status === "Sent" ? (
-                    <span className={styles.actionTextCompleted}>Completed</span>
+                    <span className={styles.actionTextCompleted}>Sent</span>
                   ) : item.status === "Pending" ? (
                     <span className={styles.actionTextDisabled}>Approval Pending</span>
                   ) : (

@@ -6,8 +6,8 @@ interface BackendInfo {
 
 const BACKEND_CONFIG_FILE = "/backend-info.json";
 const HEALTH_CHECK_ENDPOINT = "/api/health";
-const PORT_RANGE_START = 5000;
-const PORT_RANGE_END = 5009;
+const PORT_RANGE_START = 3011;
+const PORT_RANGE_END = 3020;
 const HEALTH_CHECK_TIMEOUT = 1000; // 1 second
 const DEBUG = typeof window !== "undefined" && process.env.NODE_ENV === "development";
 

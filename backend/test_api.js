@@ -2,7 +2,7 @@
 const fetch = require('node-fetch');
 
 async function testApi() {
-  const BACKEND_URL = 'http://127.0.0.1:5000';
+  const BACKEND_URL = 'http://127.0.0.1:3011';
   // We need a token. I'll try to find one or just see if the endpoint is reachable.
   // Actually, I'll check the service logs if I can.
   
